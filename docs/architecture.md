@@ -37,7 +37,7 @@ flowchart LR
 | UI | Ant Design | 管理台和通用交互；阅读器使用轻量自定义样式 |
 | Routing/Data | React Router、TanStack Query | 路由与服务端状态 |
 | Client state | Zustand | 仅保存认证展示状态、阅读设置等客户端状态 |
-| Backend | Java 21、Spring Boot 3 | 单一可执行 API 应用 |
+| Backend | Java 25、Spring Boot 3 | 单一可执行 API 应用 |
 | Security | Spring Security、JWT、BCrypt | Access JWT + 可撤销 refresh session |
 | Persistence | MyBatis-Plus、Flyway | Mapper 持久化与版本化迁移 |
 | Database | MySQL 8, InnoDB, utf8mb4 | 业务数据和可靠任务状态 |
