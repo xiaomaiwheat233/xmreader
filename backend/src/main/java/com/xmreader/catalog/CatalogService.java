@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xmreader.shared.exception.BusinessException;
 import com.xmreader.shared.web.PageResponse;
+import com.xmreader.reading.ReadingService;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -18,11 +19,17 @@ public class CatalogService {
     private final BookMapper bookMapper;
     private final ChapterMapper chapterMapper;
     private final ContentSourceMapper sourceMapper;
+    private final ReadingService readingService;
 
-    public CatalogService(BookMapper bookMapper, ChapterMapper chapterMapper, ContentSourceMapper sourceMapper) {
+    public CatalogService(
+            BookMapper bookMapper,
+            ChapterMapper chapterMapper,
+            ContentSourceMapper sourceMapper,
+            ReadingService readingService) {
         this.bookMapper = bookMapper;
         this.chapterMapper = chapterMapper;
         this.sourceMapper = sourceMapper;
+        this.readingService = readingService;
     }
 
     public HomeResponse home() {
@@ -73,13 +80,15 @@ public class CatalogService {
         return PageResponse.from(result, BookSummaryResponse::from);
     }
 
-    public BookDetailResponse getBook(String bookId) {
-        BookEntity book = requireVisibleBook(parseId(bookId));
+    public BookDetailResponse getBook(String bookId, Long userId) {
+        long parsedBookId = parseId(bookId);
+        BookEntity book = requireVisibleBook(parsedBookId);
         ContentSourceEntity source = sourceMapper.selectById(book.getSourceId());
         ChapterEntity latestChapter = book.getLatestChapterId() == null
                 ? null
                 : chapterMapper.selectById(book.getLatestChapterId());
-        return BookDetailResponse.from(book, source, latestChapter);
+        boolean inBookshelf = userId != null && readingService.isInBookshelf(userId, parsedBookId);
+        return BookDetailResponse.from(book, source, latestChapter, inBookshelf);
     }
 
     public PageResponse<ChapterSummaryResponse> listChapters(String bookId, int page, int pageSize) {

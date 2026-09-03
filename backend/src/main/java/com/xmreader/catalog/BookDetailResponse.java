@@ -22,7 +22,8 @@ public record BookDetailResponse(
     public static BookDetailResponse from(
             BookEntity book,
             ContentSourceEntity source,
-            ChapterEntity latestChapter) {
+            ChapterEntity latestChapter,
+            boolean inBookshelf) {
         LatestChapter latest = latestChapter == null ? null : new LatestChapter(
                 Long.toUnsignedString(latestChapter.getId()),
                 latestChapter.getTitle(),
@@ -39,7 +40,7 @@ public record BookDetailResponse(
                 book.getChapterCount(),
                 latest,
                 new Source(source.getSourceKey(), source.getDisplayName()),
-                false,
+                inBookshelf,
                 book.getLastCrawledAt() == null ? null : book.getLastCrawledAt().toInstant(ZoneOffset.UTC),
                 book.getUpdatedAt().toInstant(ZoneOffset.UTC));
     }

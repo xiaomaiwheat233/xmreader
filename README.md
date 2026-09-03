@@ -13,6 +13,8 @@ xmreader 是“小麦中文网”的工程名称。这是一个本地优先开�
 - 书籍检索、分页、章节正文和前后章导航 API
 - 三部原创模拟小说和九个章节，支持关闭本地初始化数据
 - 阅读器字号、行距、版心宽度和主题偏好本地持久化
+- 登录用户书架、阅读进度和最近阅读跨设备同步
+- 详情页继续阅读，阅读器节流保存并在切章时补存进度
 - `/api/health` 数据库连通性健康检查
 - `/actuator/health` 应用健康检查
 
@@ -71,6 +73,7 @@ npm run dev
 
 - 首页：<http://localhost:5173>
 - 搜索：<http://localhost:5173/search>
+- 我的阅读：<http://localhost:5173/library>（需要登录）
 - 书籍、目录和阅读地址由页面内链接进入
 
 默认 `FIXTURES_ENABLED=true`，后端会幂等写入“小麦原创测试书库”。如需使用空书库，在 `.env` 中设置 `FIXTURES_ENABLED=false`。

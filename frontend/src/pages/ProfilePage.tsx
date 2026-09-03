@@ -87,6 +87,7 @@ export default function ProfilePage() {
           <Space wrap>
             <Button type="primary" htmlType="submit" loading={updateMutation.isPending}>保存资料</Button>
             <Button danger onClick={() => logoutMutation.mutate()} loading={logoutMutation.isPending}>退出登录</Button>
+            <Link to="/library">我的阅读</Link>
             <Link to="/">返回首页</Link>
           </Space>
         </Form>

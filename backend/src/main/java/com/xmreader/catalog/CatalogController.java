@@ -4,6 +4,8 @@ import com.xmreader.shared.web.ApiResponse;
 import com.xmreader.shared.web.PageResponse;
 import com.xmreader.shared.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,8 +51,10 @@ public class CatalogController {
     @GetMapping("/books/{bookId}")
     public ApiResponse<BookDetailResponse> book(
             @PathVariable String bookId,
+            @AuthenticationPrincipal Jwt jwt,
             HttpServletRequest request) {
-        return ApiResponse.success(catalogService.getBook(bookId), requestId(request));
+        Long userId = jwt == null ? null : Long.parseUnsignedLong(jwt.getSubject());
+        return ApiResponse.success(catalogService.getBook(bookId, userId), requestId(request));
     }
 
     @GetMapping("/books/{bookId}/chapters")

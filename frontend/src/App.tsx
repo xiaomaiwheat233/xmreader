@@ -10,6 +10,7 @@ const BookDetailPage = lazy(() => import('./pages/BookDetailPage'))
 const ChapterListPage = lazy(() => import('./pages/ChapterListPage'))
 const ReaderPage = lazy(() => import('./pages/ReaderPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
+const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/book/:id/chapters" element={<ChapterListPage />} />
           <Route path="/book/:bookId/read/:chapterId" element={<ReaderPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/library" element={<LibraryPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

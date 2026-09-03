@@ -45,6 +45,11 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").authenticated()
+                        .requestMatchers(
+                                "/api/bookshelf", "/api/bookshelf/**",
+                                "/api/reading-progress", "/api/reading-progress/**",
+                                "/api/reading-history", "/api/reading-history/**")
+                        .authenticated()
                         .anyRequest().permitAll())
                 .oauth2ResourceServer(resourceServer -> resourceServer
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))

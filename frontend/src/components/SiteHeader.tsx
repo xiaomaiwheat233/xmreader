@@ -11,6 +11,7 @@ export default function SiteHeader() {
       <nav aria-label="主要导航">
         <Space size="middle">
           <Link to="/search">搜索</Link>
+          {user ? <Link to="/library">我的阅读</Link> : null}
           {user ? (
             <Link to="/profile">{user.nickname}</Link>
           ) : (
