@@ -24,7 +24,7 @@ export default function App() {
     <main className="app-shell">
       <section className="hero" aria-labelledby="page-title">
         <Text className="eyebrow">LOCAL-FIRST READING PLATFORM</Text>
-        <Title id="page-title">NovelHub</Title>
+        <Title id="page-title">小麦中文网</Title>
         <Paragraph className="subtitle">
           多源小说聚合阅读平台正在搭建中。当前页面用于验证 React、Spring Boot 与 MySQL
           的本地连接链路。

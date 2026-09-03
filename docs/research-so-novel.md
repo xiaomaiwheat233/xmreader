@@ -1,20 +1,20 @@
 # so-novel 集成可行性研究
 
-> Phase 0 调研结论。调研日期：2026-09-03。当前阶段只确定边界和方案，不编写 NovelHub 业务代码。
+> Phase 0 调研结论。调研日期：2026-09-03。当前阶段只确定边界和方案，不编写 xmreader 业务代码。
 
 ## 1. 结论先行
 
-so-novel 可以作为 NovelHub 的采集能力来源，但**不能直接当作一个稳定的、结构化的小说采集 REST API 使用**。
+so-novel 可以作为 xmreader 的采集能力来源，但**不能直接当作一个稳定的、结构化的小说采集 REST API 使用**。
 
-推荐采用“NovelHub 主系统 + 独立 Crawler Adapter”的低耦合架构：
+推荐采用“xmreader 主系统 + 独立 Crawler Adapter”的低耦合架构：
 
-- NovelHub 后端只依赖自有的 `CrawlerGateway` 契约，不依赖 so-novel 的 Java 类、规则模型或目录结构。
+- xmreader 后端只依赖自有的 `CrawlerGateway` 契约，不依赖 so-novel 的 Java 类、规则模型或目录结构。
 - Crawler Adapter 作为独立进程运行，负责适配固定版本的 so-novel，并向主系统输出规范化的书籍、目录、章节和错误结果。
 - 本地 MVP 先使用内置测试适配器打通阅读闭环；随后再实现 so-novel 适配器的小规模导入（一本书、前 5 章），验证成功后才开放整本和增量更新。
-- 不把 so-novel 源码复制进 NovelHub 后端，也不让 HTTP 请求线程直接等待整本下载。
+- 不把 so-novel 源码复制进 xmreader 后端，也不让 HTTP 请求线程直接等待整本下载。
 - so-novel 及其衍生适配代码必须保留 AGPL-3.0 合规边界。上线前需要再次完成许可证和内容来源审查。
 
-现成 CLI 只能按详情页 URL 导出整本 `txt/epub/html/pdf` 文件；现成 WebUI 的下载接口同样执行整本文件导出。二者都不能满足 NovelHub 所需的逐层结构化契约。因此，直接调用现成 Web API 不是推荐方案；CLI 文件桥接只能作为一次性技术验证或降级方案。
+现成 CLI 只能按详情页 URL 导出整本 `txt/epub/html/pdf` 文件；现成 WebUI 的下载接口同样执行整本文件导出。二者都不能满足 xmreader 所需的逐层结构化契约。因此，直接调用现成 Web API 不是推荐方案；CLI 文件桥接只能作为一次性技术验证或降级方案。
 
 ## 2. 调研基线
 
@@ -98,18 +98,18 @@ CLI 会解析详情、目录和全部章节，最后写出电子书文件。它�
 
 Web 模式使用内嵌 Jetty，默认端口 7765。当前 servlet 路由包括：
 
-| 路径 | 用途 | 对 NovelHub 的适用性 |
+| 路径 | 用途 | 对 xmreader 的适用性 |
 |---|---|---|
 | `GET /search/aggregated` | 聚合搜索，返回 JSON | 可参考，但不是承诺稳定的公共 API |
 | `GET /book-fetch` | 抓取并导出整本文件 | 阻塞执行；不返回结构化章节，不适用 |
-| `GET /download-progress` | 全局 SSE 下载进度 | 没有 NovelHub 任务隔离，不适用 |
+| `GET /download-progress` | 全局 SSE 下载进度 | 没有 xmreader 任务隔离，不适用 |
 | `GET /local-books` | 已导出文件列表 | 文件管理语义，不适用 |
 | `GET /book-download` | 下载导出文件 | 文件管理语义，不适用 |
 | `GET /book-delete` | 删除导出文件 | 使用 GET 改变状态，不应暴露 |
 | `GET /config` | 返回配置 | 不应直接暴露给业务前端 |
 | `GET /sources` | 书源列表/检查 | 可作为适配器内部诊断参考 |
 
-当前 Web 服务没有认证、授权、任务持久化和 NovelHub 所需的书籍/目录/章节契约。`/book-fetch` 在 servlet 请求线程中同步调用 `Crawler.crawl()`。因此即使作为独立容器启动，也不能直接满足异步采集系统要求。
+当前 Web 服务没有认证、授权、任务持久化和 xmreader 所需的书籍/目录/章节契约。`/book-fetch` 在 servlet 请求线程中同步调用 `Crawler.crawl()`。因此即使作为独立容器启动，也不能直接满足异步采集系统要求。
 
 源码依据：[WebServer.java](https://github.com/freeok/so-novel/blob/76150dbd2827b4de97cde83cffb3ee367bc9be3a/src/main/java/com/pcdd/sonovel/web/WebServer.java)、[BookFetchServlet.java](https://github.com/freeok/so-novel/blob/76150dbd2827b4de97cde83cffb3ee367bc9be3a/src/main/java/com/pcdd/sonovel/web/servlet/BookFetchServlet.java)。
 
@@ -123,7 +123,7 @@ Web 模式使用内嵌 Jetty，默认端口 7765。当前 servlet 路由包括�
 
 ## 5. rules 工作方式
 
-规则位于 `rules/*.json`，`config.ini` 的 `source.active-rules` 指定当前规则文件，也支持绝对路径。加载时按文件顺序为规则动态分配 ID，所以 **source ID 不是跨规则集的稳定业务标识**；NovelHub 应保存规范化的 `source_key` 和源站 URL，而不是只保存数字 ID。
+规则位于 `rules/*.json`，`config.ini` 的 `source.active-rules` 指定当前规则文件，也支持绝对路径。加载时按文件顺序为规则动态分配 ID，所以 **source ID 不是跨规则集的稳定业务标识**；xmreader 应保存规范化的 `source_key` 和源站 URL，而不是只保存数字 ID。
 
 单个规则包含：
 
@@ -142,11 +142,11 @@ Web 模式使用内嵌 Jetty，默认端口 7765。当前 servlet 路由包括�
 
 ## 6. 稳定性、安全与隐私发现
 
-- 默认抓取配置是 200–400ms 间隔、最多 3 次重试；并发未指定时，`Crawler` 最多可取 50，代码硬上限是 100。这对 NovelHub 过高，适配器应覆盖为每来源 2–4 并发，并增加来源级速率限制。
-- 部分章节失败时，上游主要写错误日志，整本任务仍可能继续；NovelHub 必须自己记录每章状态，不能仅以进程退出或总耗时判断完整成功。
-- 上游依据详情 URL 前缀匹配规则，但这不是 SSRF 防护。NovelHub 必须在任务创建和每次重定向/实际连接前进行协议、端口、DNS 解析和私网地址校验，并优先只允许已启用书源域名。
+- 默认抓取配置是 200–400ms 间隔、最多 3 次重试；并发未指定时，`Crawler` 最多可取 50，代码硬上限是 100。这对 xmreader 过高，适配器应覆盖为每来源 2–4 并发，并增加来源级速率限制。
+- 部分章节失败时，上游主要写错误日志，整本任务仍可能继续；xmreader 必须自己记录每章状态，不能仅以进程退出或总耗时判断完整成功。
+- 上游依据详情 URL 前缀匹配规则，但这不是 SSRF 防护。xmreader 必须在任务创建和每次重定向/实际连接前进行协议、端口、DNS 解析和私网地址校验，并优先只允许已启用书源域名。
 - WebUI 没有认证边界，不应映射给终端用户或公网。
-- 上游 `Main` 启动时无条件创建客户端报告线程；当前实现会向一个外部 Workers 地址发送本机用户名、主机名、MAC、本地 IP、操作系统和应用版本。虽然类注释写着“仅限代理用户”，调用处没有相应条件。NovelHub 不应在未明确告知和同意的情况下运行这一行为。后续适配器必须通过源码审查后的构建移除该行为，或在隔离环境中实施严格的目的域名出站控制。
+- 上游 `Main` 启动时无条件创建客户端报告线程；当前实现会向一个外部 Workers 地址发送本机用户名、主机名、MAC、本地 IP、操作系统和应用版本。虽然类注释写着“仅限代理用户”，调用处没有相应条件。xmreader 不应在未明确告知和同意的情况下运行这一行为。后续适配器必须通过源码审查后的构建移除该行为，或在隔离环境中实施严格的目的域名出站控制。
 - 上游规则可执行 JavaScript，Javet 又带平台相关 native 库，需要把规则供应链、平台镜像和版本固定纳入测试。
 
 源码依据：[Crawler.java](https://github.com/freeok/so-novel/blob/76150dbd2827b4de97cde83cffb3ee367bc9be3a/src/main/java/com/pcdd/sonovel/core/Crawler.java)、[ClientReportRepository.java](https://github.com/freeok/so-novel/blob/76150dbd2827b4de97cde83cffb3ee367bc9be3a/src/main/java/com/pcdd/sonovel/repository/ClientReportRepository.java)。
@@ -163,7 +163,7 @@ Web 模式使用内嵌 Jetty，默认端口 7765。当前 servlet 路由包括�
 
 推荐方案不是直接复用上游现成 Web 端点，而是在 `crawler/` 中建立独立适配器边界。具体适配实现要等 Phase 5 的单书、前 5 章实验后再定；在实验前不承诺某个内部类接口长期稳定。
 
-## 8. 推荐的 NovelHub 本地架构
+## 8. 推荐的 xmreader 本地架构
 
 当前目标是本机可运行、核心流程可验证，采用模块化单体，不引入微服务、Kafka、Elasticsearch 或 Kubernetes。
 
@@ -222,7 +222,7 @@ TIMEOUT
 INTERNAL_ADAPTER_ERROR
 ```
 
-主系统负责业务幂等、书籍/章节唯一约束、任务状态、失败重试和增量更新；Adapter 只负责受控访问与解析，不直接写 NovelHub 数据库。
+主系统负责业务幂等、书籍/章节唯一约束、任务状态、失败重试和增量更新；Adapter 只负责受控访问与解析，不直接写 xmreader 数据库。
 
 ## 10. 许可证与内容合规边界
 
@@ -230,7 +230,7 @@ so-novel 使用 AGPL-3.0。若修改、组合或通过网络提供其衍生程�
 
 工程约束：
 
-- 不复制整个上游仓库到 NovelHub。
+- 不复制整个上游仓库到 xmreader。
 - 适配器固定上游 commit/version，并保留版权、许可证、修改说明和对应源码获取方式。
 - 主系统与适配器通过明确的进程间 JSON 契约通信。
 - 上线或公开分发前，由项目所有者再次核对 AGPL-3.0 和上游免责声明；必要时咨询专业法律意见。
@@ -258,7 +258,7 @@ so-novel 使用 AGPL-3.0。若修改、组合或通过网络提供其衍生程�
 - Node.js `v22.14.0`、npm `11.3.0`：满足后续前端开发。
 - Maven `3.9.12`：满足后续后端构建。
 - Docker `27.5.1`：可用于后续单独启动 MySQL。
-- 当前默认 Java 为 `1.8.0_482`：**不满足** NovelHub 和 so-novel 的 Java 21 要求。
+- 当前默认 Java 为 `1.8.0_482`：**不满足** xmreader 和 so-novel 的 Java 21 要求。
 - 当前工作区起初为空，且尚不是 Git 仓库。
 
 进入 Phase 2 前必须安装 JDK 21，并确认 `java -version` 与 `mvn -version` 都指向同一个 JDK 21。Phase 0 没有 Java 项目，因而没有可执行的业务编译或测试；本阶段验证对象是上游源码、文档引用和本地工具链状态。
@@ -268,7 +268,7 @@ so-novel 使用 AGPL-3.0。若修改、组合或通过网络提供其衍生程�
 - [x] 阅读当前项目目录（空目录）。
 - [x] 阅读上游 README、pom.xml、LICENSE 和免责声明。
 - [x] 阅读 CLI、Web、Crawler、Parser、rules、Docker 相关实现。
-- [x] 确认没有满足 NovelHub 需求的稳定结构化 REST API。
+- [x] 确认没有满足 xmreader 需求的稳定结构化 REST API。
 - [x] 确认 Java 21、Javet native、规则 DSL、并发和文件输出行为。
 - [x] 确认 AGPL-3.0、内容合规和客户端报告风险。
 - [x] 给出低耦合 Adapter 方案和本地优先架构。

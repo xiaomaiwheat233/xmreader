@@ -1,4 +1,4 @@
-# NovelHub 数据库设计
+# xmreader（小麦中文网）数据库设计
 
 > Phase 1 逻辑设计。目标数据库为 MySQL 8，存储引擎 InnoDB，字符集 `utf8mb4`，排序规则统一为 `utf8mb4_0900_ai_ci`。
 
@@ -81,7 +81,7 @@ erDiagram
 
 ### 3.3 `content_sources`
 
-这是 NovelHub 认可的来源注册表，不保存可执行规则正文。
+这是 xmreader 认可的来源注册表，不保存可执行规则正文。
 
 | 字段 | 类型 | 约束/说明 |
 |---|---|---|

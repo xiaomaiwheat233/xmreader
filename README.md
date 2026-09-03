@@ -1,6 +1,6 @@
-# NovelHub
+# xmreader（小麦中文网）
 
-NovelHub 是一个本地优先开发的多源小说聚合阅读平台，采用 React、Spring Boot 和 MySQL。当前项目处于基础脚手架阶段，so-novel 尚未接入。
+xmreader 是“小麦中文网”的工程名称。这是一个本地优先开发的多源小说聚合阅读平台，采用 React、Spring Boot 和 MySQL。当前项目处于基础能力建设阶段，so-novel 尚未接入。
 
 ## 当前能力
 

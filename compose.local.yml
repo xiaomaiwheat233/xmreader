@@ -1,19 +1,19 @@
-name: novelhub-local
+name: xmreader-local
 
 services:
   mysql:
     image: mysql:8.0.46
-    container_name: novelhub-mysql
+    container_name: xmreader-mysql
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-novelhub}
-      MYSQL_USER: ${MYSQL_USER:-novelhub}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-novelhub_dev}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-novelhub_root_dev}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-xmreader}
+      MYSQL_USER: ${MYSQL_USER:-xmreader}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-xmreader_dev}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-xmreader_root_dev}
       TZ: UTC
     ports:
       - "127.0.0.1:3306:3306"
     volumes:
-      - novelhub_mysql_data:/var/lib/mysql
+      - xmreader_mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 5s
@@ -23,4 +23,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  novelhub_mysql_data:
+  xmreader_mysql_data:

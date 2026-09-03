@@ -1,10 +1,10 @@
-# NovelHub 系统架构
+# xmreader（小麦中文网）系统架构
 
 > Phase 1 设计文档。当前目标是本地稳定运行和完整业务闭环；生产部署不是本阶段验收项。
 
 ## 1. 架构决策
 
-NovelHub 第一版采用前后端分离的模块化单体：React 单页应用、一个 Spring Boot API、一个 MySQL 数据库。Crawler Adapter 保持独立进程边界，但在接入 so-novel 前先由 fixture 实现替代。Redis、Nginx 和完整容器化均为后续可选项。
+xmreader 第一版采用前后端分离的模块化单体：React 单页应用、一个 Spring Boot API、一个 MySQL 数据库。Crawler Adapter 保持独立进程边界，但在接入 so-novel 前先由 fixture 实现替代。Redis、Nginx 和完整容器化均为后续可选项。
 
 这样可以在一台开发机上保持简单的调试链路，同时保留未来拆分采集服务的接口边界。
 
@@ -59,7 +59,7 @@ xmreader/
 │  ├─ src/stores/
 │  └─ src/styles/
 ├─ backend/                     # Spring Boot 模块化单体
-│  ├─ src/main/java/.../novelhub/
+│  ├─ src/main/java/.../xmreader/
 │  ├─ src/main/resources/
 │  │  ├─ application.yml
 │  │  └─ db/migration/
@@ -79,7 +79,7 @@ xmreader/
 后端采用按业务能力优先、模块内分层的包结构：
 
 ```text
-com.novelhub
+com.xmreader
 ├─ auth/        controller, application, domain, persistence, dto
 ├─ user/
 ├─ catalog/     books, chapters, local search, homepage
@@ -157,7 +157,7 @@ Crawler Adapter 负责：
 - 仅访问启用的内容来源。
 - 按固定版本规则解析搜索、详情、目录和单章正文。
 - 实施来源级超时、限速和有限重试。
-- 返回规范化数据和错误，不直接访问 NovelHub 数据库。
+- 返回规范化数据和错误，不直接访问 xmreader 数据库。
 
 ### 7.2 状态机
 
@@ -238,8 +238,8 @@ stateDiagram-v2
 缓存键必须含 schema version，例如：
 
 ```text
-novelhub:v1:book:{bookId}
-novelhub:v1:book:{bookId}:chapters:{page}:{pageSize}
+xmreader:v1:book:{bookId}
+xmreader:v1:book:{bookId}:chapters:{page}:{pageSize}
 ```
 
 - 书籍详情 TTL 10 分钟，目录 TTL 5 分钟并增加少量随机抖动。

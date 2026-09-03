@@ -1,10 +1,10 @@
 spring:
   application:
-    name: novelhub-backend
+    name: xmreader-backend
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/novelhub?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false}
-    username: ${DB_USERNAME:novelhub}
-    password: ${DB_PASSWORD:novelhub_dev}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/xmreader?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${DB_USERNAME:xmreader}
+    password: ${DB_PASSWORD:xmreader_dev}
     hikari:
       maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
       minimum-idle: ${DB_POOL_MIN_IDLE:2}
@@ -33,7 +33,7 @@ management:
 
 info:
   app:
-    name: NovelHub Backend
+    name: 小麦中文网 Backend
     version: 0.1.0
 
 logging:

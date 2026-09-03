@@ -1,4 +1,4 @@
-package com.novelhub.shared.web;
+package com.xmreader.shared.web;
 
 public record ApiResponse<T>(int code, String message, T data, String requestId) {
 

@@ -1,4 +1,4 @@
-# NovelHub API 设计
+# xmreader（小麦中文网）API 设计
 
 > Phase 1 契约。基础路径 `/api`，请求和响应编码 UTF-8，除文件资源外统一使用 `application/json`。
 

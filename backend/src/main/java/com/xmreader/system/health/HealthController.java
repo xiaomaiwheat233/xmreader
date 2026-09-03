@@ -1,7 +1,7 @@
-package com.novelhub.system.health;
+package com.xmreader.system.health;
 
-import com.novelhub.shared.web.ApiResponse;
-import com.novelhub.shared.web.RequestIdFilter;
+import com.xmreader.shared.web.ApiResponse;
+import com.xmreader.shared.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

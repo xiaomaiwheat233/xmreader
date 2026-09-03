@@ -1,4 +1,4 @@
-package com.novelhub.shared.web;
+package com.xmreader.shared.web;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

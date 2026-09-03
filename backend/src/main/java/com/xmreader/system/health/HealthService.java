@@ -1,4 +1,4 @@
-package com.novelhub.system.health;
+package com.xmreader.system.health;
 
 import java.time.Clock;
 import java.time.Instant;
