@@ -1,0 +1,26 @@
+name: novelhub-local
+
+services:
+  mysql:
+    image: mysql:8.0.46
+    container_name: novelhub-mysql
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-novelhub}
+      MYSQL_USER: ${MYSQL_USER:-novelhub}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-novelhub_dev}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-novelhub_root_dev}
+      TZ: UTC
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - novelhub_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  novelhub_mysql_data:

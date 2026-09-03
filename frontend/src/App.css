@@ -1,0 +1,80 @@
+:root {
+  color: #25221f;
+  background: #f4efe6;
+  font-family:
+    Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 10%, rgb(158 122 82 / 18%), transparent 35%),
+    linear-gradient(145deg, #f8f3eb 0%, #efe5d6 100%);
+}
+
+.app-shell {
+  width: min(1080px, calc(100% - 40px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: clamp(72px, 12vw, 140px) 0 64px;
+}
+
+.hero {
+  max-width: 760px;
+  margin-bottom: 44px;
+}
+
+.hero h1.ant-typography {
+  margin: 12px 0 16px;
+  color: #2f2821;
+  font-family: Georgia, "Noto Serif SC", serif;
+  font-size: clamp(56px, 10vw, 104px);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+}
+
+.eyebrow {
+  color: #8a5c35;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.subtitle.ant-typography {
+  max-width: 650px;
+  color: #675d54;
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.8;
+}
+
+.status-card {
+  max-width: 680px;
+  border: 1px solid rgb(94 72 51 / 10%);
+  border-radius: 20px;
+  background: rgb(255 255 255 / 72%);
+  box-shadow: 0 24px 80px rgb(84 60 36 / 10%);
+  backdrop-filter: blur(18px);
+}
+
+.status-card .ant-card-body {
+  padding: clamp(24px, 5vw, 42px);
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    width: min(100% - 28px, 1080px);
+    padding-top: 56px;
+  }
+
+  .hero h1.ant-typography {
+    font-size: 54px;
+  }
+}
