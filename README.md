@@ -1,15 +1,18 @@
 # xmreader（小麦中文网）
 
-xmreader 是“小麦中文网”的工程名称。这是一个本地优先开发的多源小说聚合阅读平台，采用 React、Spring Boot 和 MySQL。当前项目处于基础能力建设阶段，so-novel 尚未接入。
+xmreader 是“小麦中文网”的工程名称。这是一个本地优先开发的多源小说聚合阅读平台，采用 React、Spring Boot 和 MySQL。当前版本已经具备本地书库和完整阅读链路，so-novel 尚未接入。
 
 ## 当前能力
 
-- React + TypeScript + Vite 前端应用与注册、登录、个人中心页面
+- React + TypeScript + Vite 前端应用，包含首页、搜索、书籍详情、章节目录、阅读器与认证页面
 - Spring Boot 3 + Java 21 后端 API
 - MySQL 8 本地开发容器
-- Flyway 用户与刷新会话表迁移
+- Flyway 用户、刷新会话、内容来源、书籍和章节表迁移
 - Spring Security + JWT + BCrypt 用户认证
 - 可轮换、可撤销的 HttpOnly refresh cookie
+- 书籍检索、分页、章节正文和前后章导航 API
+- 三部原创模拟小说和九个章节，支持关闭本地初始化数据
+- 阅读器字号、行距、版心宽度和主题偏好本地持久化
 - `/api/health` 数据库连通性健康检查
 - `/actuator/health` 应用健康检查
 
@@ -63,6 +66,14 @@ npm run dev
 ```
 
 访问 <http://localhost:5173>。前端通过 Vite 代理访问后端，不需要配置 CORS。
+
+内容入口：
+
+- 首页：<http://localhost:5173>
+- 搜索：<http://localhost:5173/search>
+- 书籍、目录和阅读地址由页面内链接进入
+
+默认 `FIXTURES_ENABLED=true`，后端会幂等写入“小麦原创测试书库”。如需使用空书库，在 `.env` 中设置 `FIXTURES_ENABLED=false`。
 
 认证入口：
 

@@ -40,6 +40,8 @@ info:
     version: 0.1.0
 
 app:
+  fixtures:
+    enabled: ${FIXTURES_ENABLED:true}
   security:
     issuer: xmreader
     audience: xmreader-web

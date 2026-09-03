@@ -1,64 +1,55 @@
 import { useQuery } from '@tanstack/react-query'
-import { Button, Card, Space, Tag, Typography } from 'antd'
+import { Alert, Button, Empty, Skeleton, Space, Typography } from 'antd'
 import { Link } from 'react-router-dom'
-import { fetchHealth } from '../api/health'
-import { useAuthStore } from '../auth/authStore'
+import { fetchHome } from '../api/catalog'
+import BookCard from '../components/BookCard'
+import SiteHeader from '../components/SiteHeader'
 
 const { Paragraph, Text, Title } = Typography
 
 export default function HomePage() {
-  const user = useAuthStore((state) => state.user)
-  const authStatus = useAuthStore((state) => state.status)
-  const health = useQuery({
-    queryKey: ['system', 'health'],
-    queryFn: fetchHealth,
-    retry: 1,
-    refetchInterval: 30_000,
-  })
-
-  const status = health.isPending
-    ? { color: 'processing', label: '正在连接后端' }
-    : health.isSuccess
-      ? { color: 'success', label: '本地服务可用' }
-      : { color: 'error', label: '后端或数据库未启动' }
+  const home = useQuery({ queryKey: ['catalog', 'home'], queryFn: fetchHome })
 
   return (
-    <main className="app-shell">
-      <section className="hero" aria-labelledby="page-title">
-        <Text className="eyebrow">XMREADER · LOCAL-FIRST READING</Text>
+    <main className="page-shell">
+      <SiteHeader />
+      <section className="home-hero" aria-labelledby="page-title">
+        <Text className="eyebrow">XMREADER · ORIGINAL FIXTURES</Text>
         <Title id="page-title">小麦中文网</Title>
-        <Paragraph className="subtitle">
-          聚合开放、合规的小说内容，专注清爽的检索与阅读体验。当前本地版本已完成基础服务与用户认证能力。
+        <Paragraph>
+          在一页页安静的文字里，找到值得继续读下去的故事。当前内容为原创模拟数据，用于验证完整阅读链路。
         </Paragraph>
-        <Space size="middle" wrap>
-          <Tag color={status.color}>{status.label}</Tag>
-          {health.data ? <Text type="secondary">Backend {health.data.version}</Text> : null}
+        <Space wrap>
+          <Button type="primary" size="large"><Link to="/search">搜索小说</Link></Button>
+          <Button size="large"><a href="#recommended">浏览推荐</a></Button>
         </Space>
       </section>
 
-      <Card className="status-card" variant="borderless">
-        <Space orientation="vertical" size="middle">
-          <Title level={3}>{user ? `欢迎回来，${user.nickname}` : '开始使用小麦中文网'}</Title>
-          <Paragraph>
-            {user
-              ? '你的登录状态已安全恢复，可以进入个人中心管理资料。'
-              : '注册或登录后，即可在后续版本中同步书架、阅读进度和最近阅读。'}
-          </Paragraph>
-          <Space wrap>
-            <Button type="primary" onClick={() => health.refetch()} loading={health.isFetching}>
-              重新检查
-            </Button>
-            {authStatus === 'authenticated' ? (
-              <Link to="/profile">个人中心</Link>
-            ) : (
-              <>
-                <Link to="/login">登录</Link>
-                <Link to="/register">注册</Link>
-              </>
-            )}
-          </Space>
-        </Space>
-      </Card>
+      {home.isError ? (
+        <Alert type="error" showIcon message="暂时无法读取书库" description="请确认 MySQL 与后端服务已经启动。" />
+      ) : null}
+      {home.isPending ? <Skeleton active paragraph={{ rows: 8 }} /> : null}
+      {home.data ? (
+        <>
+          <BookSection id="recommended" title="为你推荐" books={home.data.recommended} />
+          <BookSection title="最近更新" books={home.data.recentlyUpdated} />
+          <BookSection title="热门小说" books={home.data.popular} />
+        </>
+      ) : null}
     </main>
+  )
+}
+
+function BookSection({ id, title, books }: { id?: string; title: string; books: Awaited<ReturnType<typeof fetchHome>>['recommended'] }) {
+  return (
+    <section id={id} className="book-section">
+      <div className="section-heading">
+        <Title level={2}>{title}</Title>
+        <Link to="/search">查看全部</Link>
+      </div>
+      {books.length ? (
+        <div className="book-grid">{books.map((book) => <BookCard key={book.id} book={book} />)}</div>
+      ) : <Empty description="书库暂无内容" />}
+    </section>
   )
 }
