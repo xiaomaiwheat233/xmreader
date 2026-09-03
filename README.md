@@ -4,10 +4,12 @@ xmreader 是“小麦中文网”的工程名称。这是一个本地优先开�
 
 ## 当前能力
 
-- React + TypeScript + Vite 前端基础应用
-- Spring Boot 3 + Java 21 后端基础应用
+- React + TypeScript + Vite 前端应用与注册、登录、个人中心页面
+- Spring Boot 3 + Java 21 后端 API
 - MySQL 8 本地开发容器
-- Flyway 数据库版本管理基础配置
+- Flyway 用户与刷新会话表迁移
+- Spring Security + JWT + BCrypt 用户认证
+- 可轮换、可撤销的 HttpOnly refresh cookie
 - `/api/health` 数据库连通性健康检查
 - `/actuator/health` 应用健康检查
 
@@ -61,6 +63,12 @@ npm run dev
 ```
 
 访问 <http://localhost:5173>。前端通过 Vite 代理访问后端，不需要配置 CORS。
+
+认证入口：
+
+- <http://localhost:5173/register>
+- <http://localhost:5173/login>
+- <http://localhost:5173/profile>
 
 ## 验证
 

@@ -1,11 +1,4 @@
-import { apiClient } from './client'
-
-interface ApiResponse<T> {
-  code: number
-  message: string
-  data: T
-  requestId: string
-}
+import { apiClient, type ApiEnvelope } from './client'
 
 export interface HealthStatus {
   status: 'UP'
@@ -18,6 +11,6 @@ export interface HealthStatus {
 }
 
 export async function fetchHealth(): Promise<HealthStatus> {
-  const response = await apiClient.get<ApiResponse<HealthStatus>>('/health')
+  const response = await apiClient.get<ApiEnvelope<HealthStatus>>('/health')
   return response.data.data
 }

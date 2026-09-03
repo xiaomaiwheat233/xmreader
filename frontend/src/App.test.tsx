@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import * as authApi from './api/auth'
 import * as healthApi from './api/health'
 
 describe('App', () => {
@@ -11,6 +12,7 @@ describe('App', () => {
   })
 
   it('shows that the local services are available after a successful health check', async () => {
+    vi.spyOn(authApi, 'refreshSession').mockRejectedValue(new Error('not logged in'))
     vi.spyOn(healthApi, 'fetchHealth').mockResolvedValue({
       status: 'UP',
       components: { application: 'UP', database: 'UP' },
@@ -30,6 +32,7 @@ describe('App', () => {
     )
 
     expect(await screen.findByText('本地服务可用')).toBeInTheDocument()
+    expect(screen.getByText('小麦中文网')).toBeInTheDocument()
     expect(screen.getByText('Backend 0.1.0')).toBeInTheDocument()
   })
 })
