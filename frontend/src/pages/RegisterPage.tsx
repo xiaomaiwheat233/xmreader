@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { register, type RegisterInput } from '../api/auth'
 import type { ApiEnvelope } from '../api/client'
 import { useAuthStore } from '../auth/authStore'
+import SiteHeader from '../components/SiteHeader'
 
 const { Paragraph, Title } = Typography
 
@@ -24,8 +25,10 @@ export default function RegisterPage() {
   if (status === 'authenticated') return <Navigate to="/profile" replace />
 
   return (
-    <main className="app-shell auth-page">
-      <Card className="auth-card" variant="borderless">
+    <main className="page-shell">
+      <SiteHeader />
+      <section className="auth-page">
+        <Card className="auth-card" variant="borderless">
         <Title level={2}>加入小麦中文网</Title>
         <Paragraph type="secondary">创建账号，准备同步书架和阅读进度</Paragraph>
         <Form<RegisterInput> layout="vertical" onFinish={(values) => mutation.mutate(values)}>
@@ -69,7 +72,8 @@ export default function RegisterPage() {
             <Link to="/">返回首页</Link>
           </Space>
         </Form>
-      </Card>
+        </Card>
+      </section>
     </main>
   )
 }

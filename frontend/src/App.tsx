@@ -14,6 +14,7 @@ const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const UploadPage = lazy(() => import('./pages/UploadPage'))
 
 export default function App() {
   return (
@@ -26,10 +27,13 @@ export default function App() {
           <Route path="/book/:id/chapters" element={<ChapterListPage />} />
           <Route path="/book/:bookId/read/:chapterId" element={<ReaderPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/library" element={<LibraryPage />} />
+          <Route path="/bookshelf" element={<LibraryPage view="bookshelf" />} />
+          <Route path="/history" element={<LibraryPage view="history" />} />
+          <Route path="/library" element={<Navigate to="/bookshelf" replace />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/upload" element={<UploadPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

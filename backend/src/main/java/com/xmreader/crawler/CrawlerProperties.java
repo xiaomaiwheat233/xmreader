@@ -7,8 +7,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record CrawlerProperties(
         boolean enabled,
         URI baseUrl,
+        boolean lightNovelEnabled,
         int searchLimit,
-        int importChapterLimit,
         int connectTimeoutSeconds,
         int readTimeoutSeconds) {
 }

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Alert, List, Skeleton, Typography } from 'antd'
 import { Link, useParams } from 'react-router-dom'
-import { fetchBook, fetchChapters } from '../api/catalog'
+import { fetchAllChapters, fetchBook } from '../api/catalog'
 import SiteHeader from '../components/SiteHeader'
 
 const { Paragraph, Title } = Typography
@@ -11,7 +11,7 @@ export default function ChapterListPage() {
   const book = useQuery({ queryKey: ['catalog', 'book', id], queryFn: () => fetchBook(id), enabled: Boolean(id) })
   const chapters = useQuery({
     queryKey: ['catalog', 'book', id, 'chapters'],
-    queryFn: () => fetchChapters(id),
+    queryFn: () => fetchAllChapters(id),
     enabled: Boolean(id),
   })
 
@@ -27,7 +27,7 @@ export default function ChapterListPage() {
       {chapters.data ? (
         <List
           className="chapter-list"
-          dataSource={chapters.data.items}
+          dataSource={chapters.data}
           renderItem={(chapter) => (
             <List.Item extra={<span>{chapter.wordCount} 字</span>}>
               <Link to={`/book/${id}/read/${chapter.id}`}>

@@ -1,5 +1,5 @@
 import { apiClient, type ApiEnvelope } from './client'
-import type { BookSummary, PageData } from './catalog'
+import type { BookSummary, OnlineBookCandidate, PageData } from './catalog'
 
 export interface ReadingProgress {
   bookId: string
@@ -14,6 +14,13 @@ export interface ReadingProgress {
 export interface BookshelfItem {
   book: BookSummary
   progress: ReadingProgress | null
+  addedAt: string
+}
+
+export interface RemoteBookshelfItem extends OnlineBookCandidate {
+  id: string
+  coverUrl: string | null
+  importedBookId: string | null
   addedAt: string
 }
 
@@ -43,6 +50,22 @@ export async function addToBookshelf(bookId: string): Promise<void> {
 
 export async function removeFromBookshelf(bookId: string): Promise<void> {
   await apiClient.delete(`/bookshelf/${bookId}`)
+}
+
+export async function fetchRemoteBookshelf(page = 1): Promise<PageData<RemoteBookshelfItem>> {
+  const { data } = await apiClient.get<ApiEnvelope<PageData<RemoteBookshelfItem>>>('/remote-bookshelf', {
+    params: { page, pageSize: 20 },
+  })
+  return data.data
+}
+
+export async function addRemoteBook(book: OnlineBookCandidate): Promise<RemoteBookshelfItem> {
+  const { data } = await apiClient.put<ApiEnvelope<RemoteBookshelfItem>>('/remote-bookshelf', book)
+  return data.data
+}
+
+export async function removeRemoteBook(itemId: string): Promise<void> {
+  await apiClient.delete(`/remote-bookshelf/${itemId}`)
 }
 
 export async function fetchReadingProgress(bookId: string): Promise<ReadingProgress | null> {

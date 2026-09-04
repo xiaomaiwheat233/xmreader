@@ -58,7 +58,7 @@ public class ReadingService {
     @Transactional
     public void addToBookshelf(long userId, String rawBookId) {
         long bookId = parseId(rawBookId);
-        requireVisibleBook(bookId);
+        requireVisibleBook(bookId, userId);
         if (findShelf(userId, bookId) != null) {
             return;
         }
@@ -78,7 +78,7 @@ public class ReadingService {
 
     public ReadingProgressResponse progress(long userId, String rawBookId) {
         long bookId = parseId(rawBookId);
-        requireVisibleBook(bookId);
+        requireVisibleBook(bookId, userId);
         ReadingProgressEntity progress = findProgress(userId, bookId);
         if (progress == null) {
             return null;
@@ -91,7 +91,7 @@ public class ReadingService {
     public ReadingProgressResponse saveProgress(long userId, UpdateReadingProgressRequest request) {
         long bookId = parseId(request.bookId());
         long chapterId = parseId(request.chapterId());
-        requireVisibleBook(bookId);
+        requireVisibleBook(bookId, userId);
         ChapterEntity chapter = requireChapter(chapterId);
         if (!chapter.getBookId().equals(bookId)) {
             throw invalidQuery("章节不属于指定小说");
@@ -133,7 +133,7 @@ public class ReadingService {
         List<ReadingHistoryItemResponse> items = result.getRecords().stream()
                 .map(item -> ReadingHistoryItemResponse.from(
                         item,
-                        requireVisibleBook(item.getBookId()),
+                        requireVisibleBook(item.getBookId(), userId),
                         requireChapter(item.getChapterId())))
                 .toList();
         return new PageResponse<>(items, result.getCurrent(), result.getSize(), result.getTotal());
@@ -151,7 +151,7 @@ public class ReadingService {
     }
 
     private BookshelfItemResponse bookshelfItem(long userId, BookshelfEntity shelf) {
-        BookEntity book = requireVisibleBook(shelf.getBookId());
+        BookEntity book = requireVisibleBook(shelf.getBookId(), userId);
         ReadingProgressEntity progress = findProgress(userId, shelf.getBookId());
         ChapterEntity chapter = progress == null ? null : requireChapter(progress.getChapterId());
         return BookshelfItemResponse.from(shelf, book, progress, chapter);
@@ -187,9 +187,12 @@ public class ReadingService {
                 .eq(ReadingProgressEntity::getBookId, bookId));
     }
 
-    private BookEntity requireVisibleBook(long bookId) {
+    private BookEntity requireVisibleBook(long bookId, long userId) {
         BookEntity book = bookMapper.selectById(bookId);
-        if (book == null || book.getDeletedAt() != null || !"VISIBLE".equals(book.getVisibility())) {
+        boolean privateForAnotherUser = book != null && "PRIVATE".equals(book.getAccessScope())
+                && !Long.valueOf(userId).equals(book.getOwnerUserId());
+        if (book == null || book.getDeletedAt() != null || !"VISIBLE".equals(book.getVisibility())
+                || privateForAnotherUser) {
             throw notFound("小说不存在");
         }
         return book;

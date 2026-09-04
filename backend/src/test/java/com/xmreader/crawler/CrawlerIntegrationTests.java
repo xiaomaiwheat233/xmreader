@@ -55,7 +55,8 @@ class CrawlerIntegrationTests {
                 "第二章",
                 "2026-09-04",
                 "连载中",
-                "1000")));
+                "1000",
+                true)));
 
         mockMvc.perform(get("/api/crawler/search").param("q", " 测试小说 "))
                 .andExpect(status().isOk())
@@ -66,7 +67,7 @@ class CrawlerIntegrationTests {
     @Test
     void importedPreviewIsPersistedInTheExistingCatalog() {
         String sourceUrl = "https://books.example.test/book/42";
-        when(crawlerGateway.fetchBook(sourceUrl, 5)).thenReturn(new CrawledBook(
+        when(crawlerGateway.fetchBook(sourceUrl)).thenReturn(new CrawledBook(
                 7,
                 "授权测试源",
                 "https://books.example.test/",
@@ -98,10 +99,10 @@ class CrawlerIntegrationTests {
     }
 
     @Test
-    void importEndpointIsPublic() throws Exception {
+    void importEndpointRequiresLogin() throws Exception {
         mockMvc.perform(post("/api/crawler/imports")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
     }
 }

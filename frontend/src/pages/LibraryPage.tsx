@@ -1,20 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { App as AntApp, Button, Empty, Pagination, Progress, Skeleton, Space, Tabs, Typography } from 'antd'
+import { App as AntApp, Button, Empty, Pagination, Progress, Skeleton, Space, Typography } from 'antd'
 import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import {
   fetchBookshelf,
+  fetchRemoteBookshelf,
   fetchReadingHistory,
   removeFromBookshelf,
+  removeRemoteBook,
   removeReadingHistory,
 } from '../api/reading'
+import { downloadOnlineBook, importOnlineBook } from '../api/catalog'
 import { useAuthStore } from '../auth/authStore'
 import BookCard from '../components/BookCard'
 import SiteHeader from '../components/SiteHeader'
 
 const { Paragraph, Text, Title } = Typography
 
-export default function LibraryPage() {
+export default function LibraryPage({ view }: { view: 'bookshelf' | 'history' }) {
   const status = useAuthStore((state) => state.status)
   const user = useAuthStore((state) => state.user)
   const [shelfPage, setShelfPage] = useState(1)
@@ -24,32 +27,20 @@ export default function LibraryPage() {
     return <main className="page-shell"><Skeleton active paragraph={{ rows: 12 }} /></main>
   }
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: '/library' }} />
+    return <Navigate to="/login" replace state={{ from: view === 'bookshelf' ? '/bookshelf' : '/history' }} />
   }
 
   return (
     <main className="page-shell">
       <SiteHeader />
       <section className="page-heading">
-        <Text className="eyebrow">MY LIBRARY</Text>
-        <Title>我的阅读</Title>
-        <Paragraph>{user.nickname} 的书架和最近阅读会在登录设备间同步。</Paragraph>
+        <Text className="eyebrow">{view === 'bookshelf' ? 'BOOKSHELF' : 'READING HISTORY'}</Text>
+        <Title>{view === 'bookshelf' ? '我的书架' : '最近阅读'}</Title>
+        <Paragraph>{view === 'bookshelf' ? '收藏喜欢的小说，随时继续阅读。' : '从上次停下的位置继续。'}</Paragraph>
       </section>
-      <Tabs
-        size="large"
-        items={[
-          {
-            key: 'bookshelf',
-            label: '我的书架',
-            children: <BookshelfPanel page={shelfPage} onPageChange={setShelfPage} />,
-          },
-          {
-            key: 'history',
-            label: '最近阅读',
-            children: <HistoryPanel page={historyPage} onPageChange={setHistoryPage} />,
-          },
-        ]}
-      />
+      {view === 'bookshelf'
+        ? <BookshelfPanel page={shelfPage} onPageChange={setShelfPage} />
+        : <HistoryPanel page={historyPage} onPageChange={setHistoryPage} />}
     </main>
   )
 }
@@ -68,8 +59,28 @@ function BookshelfPanel({ page, onPageChange }: { page: number; onPageChange: (p
     onError: () => message.error('移出书架失败，请稍后重试'),
   })
 
-  if (shelf.isPending) return <Skeleton active paragraph={{ rows: 10 }} />
-  if (!shelf.data?.items.length) return <Empty description="书架还是空的，去发现喜欢的小说吧" />
+  const remote = useQuery({ queryKey: ['reading', 'remote-bookshelf', page], queryFn: () => fetchRemoteBookshelf(page) })
+  const removeRemote = useMutation({
+    mutationFn: removeRemoteBook,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['reading', 'remote-bookshelf'] })
+      message.success('已移出书架')
+    },
+  })
+  const importer = useMutation({
+    mutationFn: importOnlineBook,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['reading', 'remote-bookshelf'] })
+      await queryClient.invalidateQueries({ queryKey: ['catalog'] })
+      message.success('已导入到你的私人书库')
+    },
+    onError: () => message.error('导入失败'),
+  })
+  const downloader = useMutation({ mutationFn: downloadOnlineBook, onError: () => message.error('下载失败') })
+
+  if (shelf.isPending || remote.isPending) return <Skeleton active paragraph={{ rows: 10 }} />
+  if (!shelf.data || !remote.data) return <Empty description="书架加载失败，请稍后重试" />
+  if (!shelf.data?.items.length && !remote.data?.items.length) return <Empty description="书架还是空的，去发现喜欢的小说吧" />
 
   return (
     <>
@@ -95,6 +106,29 @@ function BookshelfPanel({ page, onPageChange }: { page: number; onPageChange: (p
           </div>
         ))}
       </div>
+      {remote.data?.items.length ? (
+        <section className="remote-shelf-section">
+          <Title level={2}>待导入的联网书目</Title>
+          <div className="online-book-grid">
+            {remote.data.items.map((item) => (
+              <div className="online-book-card" key={item.id}>
+                <Title level={4}>{item.title}</Title>
+                <Paragraph type="secondary">{item.author} · {item.sourceName}</Paragraph>
+                <Space wrap>
+                  <Button disabled={!item.importSupported} onClick={() => downloader.mutate(item)}>下载 TXT</Button>
+                  <Button type="primary" disabled={!item.importSupported || !!item.importedBookId}
+                    loading={importer.isPending && importer.variables === item.sourceUrl}
+                    onClick={() => importer.mutate(item.sourceUrl)}>
+                    {item.importedBookId ? '已导入' : '导入在线阅读'}
+                  </Button>
+                  {item.importedBookId ? <Link to={`/book/${item.importedBookId}`}>开始阅读</Link> : null}
+                  <Button danger type="link" onClick={() => removeRemote.mutate(item.id)}>移出书架</Button>
+                </Space>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <Pagination current={page} pageSize={20} total={shelf.data.total} onChange={onPageChange} hideOnSinglePage />
     </>
   )

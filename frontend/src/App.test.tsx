@@ -17,27 +17,8 @@ describe('App', () => {
     useAuthStore.setState({ accessToken: null, user: null, status: 'checking' })
   })
 
-  it('shows the 小麦中文网 home page with books from the catalog API', async () => {
+  it('shows the minimal 小麦中文网 home page and active navigation', async () => {
     vi.spyOn(authApi, 'refreshSession').mockRejectedValue(new Error('not logged in'))
-    const book = {
-      id: '1',
-      title: '麦田来信',
-      author: '小麦编辑部',
-      coverUrl: null,
-      description: '原创测试故事',
-      category: '现实',
-      status: 'COMPLETED' as const,
-      wordCount: 1000,
-      chapterCount: 3,
-      latestChapterId: '3',
-      latestChapterTitle: '第三章',
-      updatedAt: '2026-09-03T00:00:00Z',
-    }
-    vi.spyOn(catalogApi, 'fetchHome').mockResolvedValue({
-      recommended: [book],
-      recentlyUpdated: [book],
-      popular: [book],
-    })
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
@@ -50,8 +31,10 @@ describe('App', () => {
       </QueryClientProvider>,
     )
 
-    expect((await screen.findAllByText('麦田来信')).length).toBeGreaterThan(0)
-    expect(screen.getByRole('heading', { name: '小麦中文网' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '小麦中文网' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '搜索小说' })).toHaveAttribute('href', '/search')
+    expect(screen.getByRole('link', { name: '首页' })).toHaveClass('is-active')
+    expect(screen.queryByText('为你推荐')).not.toBeInTheDocument()
   })
 
   it('renders chapter content and reader navigation', async () => {
@@ -140,7 +123,10 @@ describe('App', () => {
     vi.spyOn(readingApi, 'fetchReadingHistory').mockResolvedValue({
       items: [], page: 1, pageSize: 20, total: 0,
     })
-    window.history.pushState({}, '', '/library')
+    vi.spyOn(readingApi, 'fetchRemoteBookshelf').mockResolvedValue({
+      items: [], page: 1, pageSize: 20, total: 0,
+    })
+    window.history.pushState({}, '', '/bookshelf')
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
@@ -151,7 +137,7 @@ describe('App', () => {
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByRole('heading', { name: '我的阅读' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '我的书架' })).toBeInTheDocument()
     expect(await screen.findByText('麦田来信')).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: '继续第 2 章' })).toHaveAttribute(
       'href',

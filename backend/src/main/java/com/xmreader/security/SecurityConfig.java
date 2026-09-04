@@ -47,6 +47,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers(
                                 "/api/bookshelf", "/api/bookshelf/**",
+                                "/api/remote-bookshelf", "/api/remote-bookshelf/**",
+                                "/api/crawler/imports", "/api/crawler/imports/**",
+                                "/api/books/uploads",
                                 "/api/reading-progress", "/api/reading-progress/**",
                                 "/api/reading-history", "/api/reading-history/**")
                         .authenticated()

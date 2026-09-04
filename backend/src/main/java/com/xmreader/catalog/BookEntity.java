@@ -11,6 +11,7 @@ public class BookEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     private Long sourceId;
+    private Long ownerUserId;
     private String sourceBookId;
     private String sourceUrl;
     private byte[] sourceUrlHash;
@@ -21,6 +22,8 @@ public class BookEntity {
     private String category;
     private String status;
     private String visibility;
+    private String accessScope;
+    private String originType;
     private Long wordCount;
     private Integer chapterCount;
     private Long latestChapterId;
@@ -34,6 +37,8 @@ public class BookEntity {
     public void setId(Long id) { this.id = id; }
     public Long getSourceId() { return sourceId; }
     public void setSourceId(Long sourceId) { this.sourceId = sourceId; }
+    public Long getOwnerUserId() { return ownerUserId; }
+    public void setOwnerUserId(Long ownerUserId) { this.ownerUserId = ownerUserId; }
     public String getSourceBookId() { return sourceBookId; }
     public void setSourceBookId(String sourceBookId) { this.sourceBookId = sourceBookId; }
     public String getSourceUrl() { return sourceUrl; }
@@ -54,6 +59,10 @@ public class BookEntity {
     public void setStatus(String status) { this.status = status; }
     public String getVisibility() { return visibility; }
     public void setVisibility(String visibility) { this.visibility = visibility; }
+    public String getAccessScope() { return accessScope; }
+    public void setAccessScope(String accessScope) { this.accessScope = accessScope; }
+    public String getOriginType() { return originType; }
+    public void setOriginType(String originType) { this.originType = originType; }
     public Long getWordCount() { return wordCount; }
     public void setWordCount(Long wordCount) { this.wordCount = wordCount; }
     public Integer getChapterCount() { return chapterCount; }

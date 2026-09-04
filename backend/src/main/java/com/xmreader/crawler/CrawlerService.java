@@ -30,8 +30,11 @@ public class CrawlerService {
         return gateway.search(normalized);
     }
 
-    public ImportedBookResponse importBook(String sourceUrl) {
-        CrawledBook book = gateway.fetchBook(sourceUrl.trim(), properties.importChapterLimit());
-        return catalogWriter.save(book);
+    public CrawledBook downloadBook(String sourceUrl) {
+        return gateway.fetchBook(sourceUrl.trim());
+    }
+
+    ImportedBookResponse importBook(String sourceUrl) {
+        return catalogWriter.save(gateway.fetchBook(sourceUrl.trim()));
     }
 }

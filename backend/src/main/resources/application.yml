@@ -16,6 +16,10 @@ spring:
   jackson:
     deserialization:
       fail-on-unknown-properties: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
   lifecycle:
     timeout-per-shutdown-phase: 20s
 
@@ -43,10 +47,10 @@ app:
   crawler:
     enabled: ${CRAWLER_ENABLED:true}
     base-url: ${CRAWLER_BASE_URL:http://localhost:7765}
+    light-novel-enabled: ${LIGHT_NOVEL_ENABLED:true}
     search-limit: ${CRAWLER_SEARCH_LIMIT:20}
-    import-chapter-limit: ${CRAWLER_IMPORT_CHAPTER_LIMIT:5}
     connect-timeout-seconds: ${CRAWLER_CONNECT_TIMEOUT_SECONDS:5}
-    read-timeout-seconds: ${CRAWLER_READ_TIMEOUT_SECONDS:180}
+    read-timeout-seconds: ${CRAWLER_READ_TIMEOUT_SECONDS:3600}
   fixtures:
     enabled: ${FIXTURES_ENABLED:false}
   security:

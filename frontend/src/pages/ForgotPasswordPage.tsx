@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { resetPassword, type ResetPasswordInput } from '../api/auth'
 import type { ApiEnvelope } from '../api/client'
 import { useAuthStore } from '../auth/authStore'
+import SiteHeader from '../components/SiteHeader'
 
 const { Paragraph, Title } = Typography
 
@@ -24,8 +25,10 @@ export default function ForgotPasswordPage() {
   if (status === 'authenticated') return <Navigate to="/profile" replace />
 
   return (
-    <main className="app-shell auth-page">
-      <Card className="auth-card" variant="borderless">
+    <main className="page-shell">
+      <SiteHeader />
+      <section className="auth-page">
+        <Card className="auth-card" variant="borderless">
         <Title level={2}>找回密码</Title>
         <Paragraph type="secondary">个人测试模式：确认用户名后即可设置新密码</Paragraph>
         <Form<ResetPasswordInput> layout="vertical" onFinish={(values) => mutation.mutate(values)}>
@@ -68,7 +71,8 @@ export default function ForgotPasswordPage() {
             <Link to="/login">返回登录</Link>
           </Space>
         </Form>
-      </Card>
+        </Card>
+      </section>
     </main>
   )
 }

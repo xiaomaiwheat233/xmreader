@@ -40,13 +40,14 @@ public class CatalogService {
     }
 
     public PageResponse<BookSummaryResponse> list(
+            Long userId,
             int page,
             int pageSize,
             String category,
             String status,
             String sort) {
         validatePage(page, pageSize, 100);
-        LambdaQueryWrapper<BookEntity> query = visibleBooks();
+        LambdaQueryWrapper<BookEntity> query = accessibleBooks(userId);
         if (category != null && !category.isBlank()) {
             query.eq(BookEntity::getCategory, category.trim());
         }
@@ -62,14 +63,19 @@ public class CatalogService {
         return PageResponse.from(result, BookSummaryResponse::from);
     }
 
-    public PageResponse<BookSummaryResponse> search(String keyword, int page, int pageSize) {
+    public PageResponse<BookSummaryResponse> list(
+            int page, int pageSize, String category, String status, String sort) {
+        return list(null, page, pageSize, category, status, sort);
+    }
+
+    public PageResponse<BookSummaryResponse> search(Long userId, String keyword, int page, int pageSize) {
         validatePage(page, pageSize, 100);
         String normalized = keyword == null ? "" : keyword.trim();
         if (normalized.isEmpty() || normalized.length() > 100) {
             throw invalidQuery("搜索关键词长度必须为 1 到 100");
         }
         String escaped = escapeLike(normalized);
-        LambdaQueryWrapper<BookEntity> query = visibleBooks()
+        LambdaQueryWrapper<BookEntity> query = accessibleBooks(userId)
                 .and(wrapper -> wrapper
                         .apply("title LIKE CONCAT('%', {0}, '%') ESCAPE '!'", escaped)
                         .or()
@@ -80,9 +86,13 @@ public class CatalogService {
         return PageResponse.from(result, BookSummaryResponse::from);
     }
 
+    public PageResponse<BookSummaryResponse> search(String keyword, int page, int pageSize) {
+        return search(null, keyword, page, pageSize);
+    }
+
     public BookDetailResponse getBook(String bookId, Long userId) {
         long parsedBookId = parseId(bookId);
-        BookEntity book = requireVisibleBook(parsedBookId);
+        BookEntity book = requireAccessibleBook(parsedBookId, userId);
         ContentSourceEntity source = sourceMapper.selectById(book.getSourceId());
         ChapterEntity latestChapter = book.getLatestChapterId() == null
                 ? null
@@ -91,10 +101,10 @@ public class CatalogService {
         return BookDetailResponse.from(book, source, latestChapter, inBookshelf);
     }
 
-    public PageResponse<ChapterSummaryResponse> listChapters(String bookId, int page, int pageSize) {
+    public PageResponse<ChapterSummaryResponse> listChapters(String bookId, Long userId, int page, int pageSize) {
         validatePage(page, pageSize, 200);
         long parsedBookId = parseId(bookId);
-        requireVisibleBook(parsedBookId);
+        requireAccessibleBook(parsedBookId, userId);
         LambdaQueryWrapper<ChapterEntity> query = new LambdaQueryWrapper<ChapterEntity>()
                 .eq(ChapterEntity::getBookId, parsedBookId)
                 .orderByAsc(ChapterEntity::getChapterIndex);
@@ -102,12 +112,16 @@ public class CatalogService {
         return PageResponse.from(result, ChapterSummaryResponse::from);
     }
 
-    public ChapterDetailResponse getChapter(String chapterId) {
+    public PageResponse<ChapterSummaryResponse> listChapters(String bookId, int page, int pageSize) {
+        return listChapters(bookId, null, page, pageSize);
+    }
+
+    public ChapterDetailResponse getChapter(String chapterId, Long userId) {
         ChapterEntity chapter = chapterMapper.selectById(parseId(chapterId));
         if (chapter == null) {
             throw notFound("章节不存在");
         }
-        BookEntity book = requireVisibleBook(chapter.getBookId());
+        BookEntity book = requireAccessibleBook(chapter.getBookId(), userId);
         ChapterEntity previous = chapterMapper.selectOne(new LambdaQueryWrapper<ChapterEntity>()
                 .eq(ChapterEntity::getBookId, book.getId())
                 .lt(ChapterEntity::getChapterIndex, chapter.getChapterIndex())
@@ -121,6 +135,10 @@ public class CatalogService {
         return ChapterDetailResponse.from(chapter, book, previous, next);
     }
 
+    public ChapterDetailResponse getChapter(String chapterId) {
+        return getChapter(chapterId, null);
+    }
+
     private List<BookSummaryResponse> listBooks(String sort, int limit) {
         LambdaQueryWrapper<BookEntity> query = visibleBooks();
         applySort(query, sort);
@@ -129,9 +147,21 @@ public class CatalogService {
     }
 
     private LambdaQueryWrapper<BookEntity> visibleBooks() {
-        return new LambdaQueryWrapper<BookEntity>()
+        return accessibleBooks(null);
+    }
+
+    private LambdaQueryWrapper<BookEntity> accessibleBooks(Long userId) {
+        LambdaQueryWrapper<BookEntity> query = new LambdaQueryWrapper<BookEntity>()
                 .eq(BookEntity::getVisibility, "VISIBLE")
                 .isNull(BookEntity::getDeletedAt);
+        if (userId == null) {
+            query.eq(BookEntity::getAccessScope, "PUBLIC");
+        } else {
+            query.and(scope -> scope.eq(BookEntity::getAccessScope, "PUBLIC")
+                    .or(owner -> owner.eq(BookEntity::getAccessScope, "PRIVATE")
+                            .eq(BookEntity::getOwnerUserId, userId)));
+        }
+        return query;
     }
 
     private void applySort(LambdaQueryWrapper<BookEntity> query, String rawSort) {
@@ -146,9 +176,12 @@ public class CatalogService {
         query.orderByDesc(BookEntity::getId);
     }
 
-    private BookEntity requireVisibleBook(long id) {
+    private BookEntity requireAccessibleBook(long id, Long userId) {
         BookEntity book = bookMapper.selectById(id);
-        if (book == null || book.getDeletedAt() != null || !"VISIBLE".equals(book.getVisibility())) {
+        boolean privateForAnotherUser = book != null && "PRIVATE".equals(book.getAccessScope())
+                && (userId == null || !userId.equals(book.getOwnerUserId()));
+        if (book == null || book.getDeletedAt() != null || !"VISIBLE".equals(book.getVisibility())
+                || privateForAnotherUser) {
             throw notFound("小说不存在");
         }
         return book;

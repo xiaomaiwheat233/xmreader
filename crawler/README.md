@@ -17,9 +17,14 @@ Search page
 
 Import button (authenticated)
   -> POST /api/crawler/imports
-  -> SoNovel /xmreader/book?limit=5
-  -> books / chapters in MySQL
+  -> returns a task id immediately
+  -> SoNovel /xmreader/book
+  -> private books / chapters in MySQL
   -> existing book detail and reader pages
+
+Download button
+  -> POST /api/crawler/downloads
+  -> returns a UTF-8 TXT attachment without writing to MySQL
 ```
 
 Run the stack with `start-local.cmd`, or start the dependencies directly:
@@ -31,9 +36,14 @@ docker compose -f compose.local.yml up -d --build
 The first Adapter build downloads a JDK image, the pinned upstream source, and
 Maven dependencies. Later starts reuse Docker's build cache.
 
-Current MVP limitations:
+The backend also merges a cached metadata index from the open lnovel API so
+linovelib light novels can be found. Because linovelib's current search/content
+flow requires browser-side guards and is not a working SoNovel rule, these
+results are deliberately metadata-only and link back to the source site.
 
-- imports are synchronous and limited to the first 5 chapters;
+Current limitations:
+
+- import tasks are kept in process memory; an application restart discards task status, while already committed books remain;
 - third-party source rules can become unavailable or stop matching;
 - the Adapter must not be exposed to a public network;
 - only crawl content that you are legally allowed to access, without bypassing

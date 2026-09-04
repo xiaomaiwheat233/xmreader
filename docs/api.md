@@ -223,7 +223,7 @@ Adapter 未启动或源站不可用时返回 `503 CRAWLER_UNAVAILABLE`，不影�
 }
 ```
 
-本地 MVP 同步抓取并导入前 5 章，成功返回新建或更新后的 `bookId/title/importedChapterCount`，
+当前同步抓取并导入来源目录中的全部章节，成功返回新建或更新后的 `bookId/title/importedChapterCount`，
 前端随后进入现有书籍详情和阅读链路。来源 URL 必须匹配 Adapter 内已启用规则的协议、主机和端口。
 首版不绕过登录、付费、验证码、DRM 或其他访问控制，也不承诺每个第三方书源长期可用。
 
@@ -560,3 +560,15 @@ INTERNAL_ADAPTER_ERROR
 - 正文 API 不返回未经清洗的 HTML。
 - 分页、ID、时间和错误结构在所有端点一致。
 - OpenAPI 实现必须与本文一致；若实现阶段调整契约，先更新本文和契约测试。
+
+## 12. 当前本地版的导入、下载与上传接口
+
+- `GET /api/crawler/search?q=关键词`：合并 SoNovel 可抓取结果与轻小说元数据结果。`importSupported=false` 表示仅展示元数据并跳转源站。
+- `POST /api/crawler/downloads`：请求体为 `{ "sourceUrl": "https://..." }`，返回 UTF-8 TXT，不写入本站数据库。
+- `POST /api/crawler/imports`：需要登录，创建私人导入任务并立即返回 `taskId`。
+- `GET /api/crawler/imports/{taskId}`：需要登录，查询 `QUEUED/RUNNING/COMPLETED/FAILED` 状态；只能查询自己的任务。
+- `PUT /api/remote-bookshelf`：需要登录，把联网搜索结果作为远程书签加入书架，不预先抓取正文。
+- `GET /api/remote-bookshelf`、`DELETE /api/remote-bookshelf/{itemId}`：查看或移除自己的远程书签。
+- `POST /api/books/uploads`：需要登录，`multipart/form-data` 上传 UTF-8 TXT，可附带 `title`、`author`；上传内容作为本站公开书目。
+
+联网导入的书使用 `PRIVATE + owner_user_id` 隔离，仅导入者可检索和阅读；用户上传的书使用 `PUBLIC`，全站可见。

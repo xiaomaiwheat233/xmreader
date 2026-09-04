@@ -6,5 +6,5 @@ public interface CrawlerGateway {
 
     List<OnlineBookCandidate> search(String keyword);
 
-    CrawledBook fetchBook(String sourceUrl, int chapterLimit);
+    CrawledBook fetchBook(String sourceUrl);
 }

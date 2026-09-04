@@ -11,5 +11,6 @@ public record OnlineBookCandidate(
         String latestChapterTitle,
         String updatedAtText,
         String statusText,
-        String wordCountText) {
+        String wordCountText,
+        boolean importSupported) {
 }

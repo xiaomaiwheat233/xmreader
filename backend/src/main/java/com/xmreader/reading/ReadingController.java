@@ -21,9 +21,37 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReadingController {
 
     private final ReadingService readingService;
+    private final RemoteBookshelfService remoteBookshelfService;
 
-    public ReadingController(ReadingService readingService) {
+    public ReadingController(ReadingService readingService, RemoteBookshelfService remoteBookshelfService) {
         this.readingService = readingService;
+        this.remoteBookshelfService = remoteBookshelfService;
+    }
+
+    @GetMapping("/remote-bookshelf")
+    public ApiResponse<PageResponse<RemoteBookshelfItemResponse>> remoteBookshelf(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize,
+            HttpServletRequest request) {
+        return ApiResponse.success(remoteBookshelfService.list(userId(jwt), page, pageSize), requestId(request));
+    }
+
+    @PutMapping("/remote-bookshelf")
+    public ApiResponse<RemoteBookshelfItemResponse> saveRemoteBook(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody SaveRemoteBookRequest body,
+            HttpServletRequest request) {
+        return ApiResponse.success(remoteBookshelfService.save(userId(jwt), body), requestId(request));
+    }
+
+    @DeleteMapping("/remote-bookshelf/{itemId}")
+    public ApiResponse<Void> removeRemoteBook(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable String itemId,
+            HttpServletRequest request) {
+        remoteBookshelfService.remove(userId(jwt), itemId);
+        return ApiResponse.success(null, requestId(request));
     }
 
     @GetMapping("/bookshelf")

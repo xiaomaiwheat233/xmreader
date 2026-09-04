@@ -1,6 +1,14 @@
 :root {
-  color: #25221f;
-  background: #f4efe6;
+  --ink: #332f2a;
+  --muted: #797168;
+  --paper: #fbfaf7;
+  --surface: rgb(255 255 255 / 76%);
+  --line: rgb(83 72 60 / 11%);
+  --accent: #79634d;
+  --accent-deep: #5d4a39;
+  --active: #e3dace;
+  color: var(--ink);
+  background: var(--paper);
   font-family:
     Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
   font-synthesis: none;
@@ -16,8 +24,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 10% 10%, rgb(158 122 82 / 18%), transparent 35%),
-    linear-gradient(145deg, #f8f3eb 0%, #efe5d6 100%);
+    radial-gradient(circle at 50% -10%, rgb(174 157 136 / 13%), transparent 38%),
+    linear-gradient(180deg, #fbfaf7 0%, #f5f1eb 100%);
 }
 
 .app-shell {
@@ -71,14 +79,16 @@ body {
 .auth-page {
   display: grid;
   place-items: start center;
-  padding-top: clamp(40px, 8vw, 96px);
+  min-height: calc(100vh - 160px);
+  padding: clamp(28px, 7vw, 76px) 0 60px;
 }
 
 .auth-card {
   width: min(100%, 480px);
   border: 1px solid rgb(94 72 51 / 10%);
-  border-radius: 20px;
-  box-shadow: 0 24px 80px rgb(84 60 36 / 10%);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 18px 55px rgb(70 58 46 / 7%);
 }
 
 .auth-card .ant-card-body {
@@ -118,42 +128,101 @@ body {
   width: min(1180px, calc(100% - 40px));
   min-height: 100vh;
   margin: 0 auto;
-  padding-bottom: 80px;
+  padding-bottom: 72px;
 }
 
 .site-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  min-height: 72px;
-  margin-bottom: 48px;
-  border-bottom: 1px solid rgb(94 72 51 / 10%);
+  gap: clamp(18px, 3vw, 38px);
+  min-height: 68px;
+  margin-bottom: 42px;
+  border-bottom: 1px solid var(--line);
+  background: rgb(250 248 244 / 88%);
+  backdrop-filter: blur(18px);
 }
 
 .site-brand {
-  color: #35291f;
+  flex: 0 0 auto;
+  color: var(--ink);
   font-family: Georgia, "Noto Serif SC", serif;
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.topbar-nav,
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topbar-nav {
+  flex: 1;
+}
+
+.topbar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 7px 13px;
+  border-radius: 9px;
+  color: #625b53;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.topbar-link:hover {
+  color: var(--ink);
+  background: rgb(226 218 207 / 52%);
+}
+
+.topbar-link.is-active {
+  color: #3f352c;
+  background: var(--active);
+}
+
+.topbar-action {
+  border: 1px solid var(--line);
+  background: rgb(255 255 255 / 55%);
+}
+
+.home-page {
+  display: flex;
+  flex-direction: column;
 }
 
 .home-hero {
-  max-width: 800px;
-  padding: clamp(42px, 8vw, 92px) 0 clamp(60px, 10vw, 112px);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 190px);
+  padding: 0 0 12vh;
+  text-align: center;
 }
 
 .home-hero h1.ant-typography {
-  margin: 14px 0 18px;
+  margin: 0 0 32px;
+  color: #3b342d;
   font-family: Georgia, "Noto Serif SC", serif;
-  font-size: clamp(54px, 9vw, 96px);
+  font-size: clamp(52px, 9vw, 92px);
   font-weight: 500;
   letter-spacing: -0.05em;
 }
 
-.home-hero p.ant-typography {
-  color: #675d54;
-  font-size: clamp(18px, 2vw, 22px);
-  line-height: 1.8;
+.home-hero .ant-btn-primary {
+  min-width: 148px;
+  height: 46px;
+  border-color: var(--accent-deep);
+  background: var(--accent-deep);
+  box-shadow: none;
 }
 
 .book-section,
@@ -229,15 +298,15 @@ body {
   height: 100%;
   overflow: hidden;
   border: 1px solid rgb(94 72 51 / 9%);
-  border-radius: 18px;
-  background: rgb(255 255 255 / 72%);
-  box-shadow: 0 14px 44px rgb(84 60 36 / 7%);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 10px 32px rgb(70 58 46 / 5%);
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .book-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 56px rgb(84 60 36 / 12%);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 42px rgb(70 58 46 / 9%);
 }
 
 .book-card .ant-card-body {
@@ -286,12 +355,13 @@ body {
 
 .page-heading {
   max-width: 760px;
-  margin-bottom: 44px;
+  margin-bottom: 38px;
 }
 
 .page-heading h1.ant-typography {
   font-family: Georgia, "Noto Serif SC", serif;
-  font-size: clamp(40px, 6vw, 64px);
+  margin-bottom: 10px;
+  font-size: clamp(36px, 5vw, 54px);
 }
 
 .book-detail {
@@ -538,7 +608,44 @@ body {
   }
 
   .site-header {
-    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    min-height: auto;
+    margin-bottom: 28px;
+    padding: 11px 0;
+  }
+
+  .site-brand {
+    flex: 1;
+  }
+
+  .topbar-actions {
+    order: 4;
+    flex-basis: 100%;
+    gap: 4px;
+  }
+
+  .topbar-nav {
+    order: 3;
+    flex-basis: 100%;
+    overflow-x: auto;
+    padding-top: 5px;
+  }
+
+  .topbar-link {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .home-hero {
+    min-height: calc(100vh - 170px);
+    padding-bottom: 16vh;
+  }
+
+  .auth-page {
+    min-height: auto;
+    padding-top: 16px;
   }
 
   .book-grid {

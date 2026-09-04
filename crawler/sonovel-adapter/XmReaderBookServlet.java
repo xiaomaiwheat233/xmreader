@@ -10,6 +10,7 @@ import com.pcdd.sonovel.parser.BookParser;
 import com.pcdd.sonovel.parser.ChapterParser;
 import com.pcdd.sonovel.parser.TocParser;
 import com.pcdd.sonovel.utils.SourceUtils;
+import com.pcdd.sonovel.utils.VirtualThreadLimiter;
 import com.pcdd.sonovel.web.util.RespUtils;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,49 +21,56 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Minimal structured endpoint maintained by xmreader on top of a pinned
- * so-novel version. It intentionally limits each request to a small preview.
+ * Structured endpoint maintained by xmreader on top of a pinned so-novel
+ * version. It imports every chapter exposed by the selected source's catalog.
  */
 public class XmReaderBookServlet extends HttpServlet {
-
-    private static final int DEFAULT_LIMIT = 5;
-    private static final int MAX_LIMIT = 20;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         try {
             String bookUrl = request.getParameter("url");
-            int limit = parseLimit(request.getParameter("limit"));
             Rule rule = validateSourceUrl(bookUrl);
 
             AppConfig config = BeanUtil.copyProperties(AppConfigLoader.APP_CONFIG, AppConfig.class);
             config.setSourceId(rule.getId());
             config.setExtName("txt");
             config.setEnableProgressbar(0);
-            config.setConcurrency(1);
 
             Rule.Book book = new BookParser(config).parse(bookUrl);
             BookContext.set(book);
             try {
-                List<Chapter> toc = new TocParser(config).parse(bookUrl, 1, limit)
-                        .stream()
-                        .limit(limit)
-                        .toList();
+                List<Chapter> toc = new TocParser(config).parseAll(bookUrl);
                 if (toc.isEmpty()) {
                     RespUtils.writeError(response, 500, "Source chapter list is empty");
                     return;
                 }
 
                 ChapterParser chapterParser = new ChapterParser(config);
+                int maxConcurrent = config.getConcurrency() == -1
+                        ? Math.min(4, toc.size())
+                        : Math.max(1, Math.min(config.getConcurrency(), Math.min(4, toc.size())));
+                Map<Integer, Chapter> parsedChapters = new ConcurrentHashMap<>();
+                try (var limiter = new VirtualThreadLimiter(maxConcurrent)) {
+                    for (int index = 0; index < toc.size(); index++) {
+                        int chapterIndex = index;
+                        limiter.submit(() -> {
+                            Chapter parsed = chapterParser.parse(toc.get(chapterIndex));
+                            if (parsed != null && parsed.getContent() != null && !parsed.getContent().isBlank()) {
+                                parsedChapters.put(chapterIndex, parsed);
+                            }
+                        });
+                    }
+                }
+
                 int normalizedChapterIndex = 1;
                 List<Map<String, Object>> chapters = new ArrayList<>();
-                for (Chapter chapterRef : toc) {
-                    Chapter chapter = chapterParser.parse(chapterRef);
-                    if (chapter == null || chapter.getContent() == null || chapter.getContent().isBlank()) {
-                        continue;
-                    }
+                for (int index = 0; index < toc.size(); index++) {
+                    Chapter chapter = parsedChapters.get(index);
+                    if (chapter == null) continue;
                     Map<String, Object> chapterPayload = new LinkedHashMap<>();
                     chapterPayload.put("chapterIndex", normalizedChapterIndex++);
                     chapterPayload.put("title", chapter.getTitle());
@@ -96,21 +104,6 @@ public class XmReaderBookServlet extends HttpServlet {
             RespUtils.writeError(response, 400, exception.getMessage());
         } catch (Exception exception) {
             RespUtils.writeError(response, 500, "Crawler adapter failed: " + exception.getMessage());
-        }
-    }
-
-    private int parseLimit(String rawLimit) {
-        if (rawLimit == null || rawLimit.isBlank()) {
-            return DEFAULT_LIMIT;
-        }
-        try {
-            int limit = Integer.parseInt(rawLimit);
-            if (limit < 1 || limit > MAX_LIMIT) {
-                throw new IllegalArgumentException("limit must be between 1 and " + MAX_LIMIT);
-            }
-            return limit;
-        } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException("limit must be an integer", exception);
         }
     }
 

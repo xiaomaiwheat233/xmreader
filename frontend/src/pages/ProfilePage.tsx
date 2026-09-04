@@ -3,6 +3,7 @@ import { App as AntApp, Avatar, Button, Card, Form, Input, Space, Spin, Typograp
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { changePassword, logout, updateProfile } from '../api/auth'
 import { useAuthStore } from '../auth/authStore'
+import SiteHeader from '../components/SiteHeader'
 
 const { Paragraph, Title } = Typography
 
@@ -55,8 +56,10 @@ export default function ProfilePage() {
   if (!user) return <Navigate to="/login" replace />
 
   return (
-    <main className="app-shell auth-page">
-      <Card className="auth-card profile-card" variant="borderless">
+    <main className="page-shell">
+      <SiteHeader />
+      <section className="auth-page">
+        <Card className="auth-card profile-card" variant="borderless">
         <Space align="center" size="middle">
           <Avatar
             size={64}
@@ -87,7 +90,7 @@ export default function ProfilePage() {
           <Space wrap>
             <Button type="primary" htmlType="submit" loading={updateMutation.isPending}>保存资料</Button>
             <Button danger onClick={() => logoutMutation.mutate()} loading={logoutMutation.isPending}>退出登录</Button>
-            <Link to="/library">我的阅读</Link>
+            <Link to="/bookshelf">我的书架</Link>
             <Link to="/">返回首页</Link>
           </Space>
         </Form>
@@ -127,7 +130,8 @@ export default function ProfilePage() {
             </Button>
           </Form>
         </div>
-      </Card>
+        </Card>
+      </section>
     </main>
   )
 }

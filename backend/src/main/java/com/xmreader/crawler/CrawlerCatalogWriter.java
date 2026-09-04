@@ -42,7 +42,16 @@ public class CrawlerCatalogWriter {
     }
 
     @Transactional
+    public ImportedBookResponse save(CrawledBook crawledBook, long ownerUserId) {
+        return saveInternal(crawledBook, ownerUserId);
+    }
+
+    @Transactional
     public ImportedBookResponse save(CrawledBook crawledBook) {
+        return saveInternal(crawledBook, null);
+    }
+
+    private ImportedBookResponse saveInternal(CrawledBook crawledBook, Long ownerUserId) {
         validate(crawledBook);
         LocalDateTime now = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
         String sourceUrl = normalizeUrl(crawledBook.sourceUrl());
@@ -50,17 +59,22 @@ public class CrawlerCatalogWriter {
         ContentSourceEntity source = findOrCreateSource(crawledBook, sourceBaseUrl, now);
 
         byte[] sourceUrlHash = hash(sourceUrl);
-        BookEntity book = bookMapper.selectOne(new LambdaQueryWrapper<BookEntity>()
+        LambdaQueryWrapper<BookEntity> existingQuery = new LambdaQueryWrapper<BookEntity>()
                 .eq(BookEntity::getSourceId, source.getId())
-                .eq(BookEntity::getSourceUrlHash, sourceUrlHash)
-                .last("LIMIT 1"));
+                .eq(BookEntity::getSourceUrlHash, sourceUrlHash);
+        if (ownerUserId == null) existingQuery.isNull(BookEntity::getOwnerUserId);
+        else existingQuery.eq(BookEntity::getOwnerUserId, ownerUserId);
+        BookEntity book = bookMapper.selectOne(existingQuery.last("LIMIT 1"));
         if (book == null) {
             book = new BookEntity();
             book.setSourceId(source.getId());
+            book.setOwnerUserId(ownerUserId);
             book.setSourceBookId(HexFormat.of().formatHex(sourceUrlHash));
             book.setSourceUrl(sourceUrl);
             book.setSourceUrlHash(sourceUrlHash);
             book.setVisibility("VISIBLE");
+            book.setAccessScope(ownerUserId == null ? "PUBLIC" : "PRIVATE");
+            book.setOriginType("CRAWLER");
             book.setWordCount(0L);
             book.setChapterCount(0);
             book.setCreatedAt(now);
