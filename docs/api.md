@@ -193,6 +193,26 @@ HTTP 状态表达协议结果，`code` 表达稳定业务分类：
 
 匿名可用，只搜索本地 MySQL。另支持 `page/pageSize`。`q` 去除首尾空白后长度 1–100，匹配书名或作者。
 
+### `GET /api/crawler/search?q={keyword}`
+
+匿名可用，通过独立 SoNovel Adapter 聚合联网书源。结果仍是尚未进入本地书库的候选项，包含
+`sourceId/sourceName/sourceUrl/title/author/description/category/latestChapterTitle` 等字段。
+Adapter 未启动或源站不可用时返回 `503 CRAWLER_UNAVAILABLE`，不影响本地搜索。
+
+### `POST /api/crawler/imports`
+
+要求登录。把联网搜索结果中的来源地址提交给后端：
+
+```json
+{
+  "sourceUrl": "https://enabled-source.example/book/123"
+}
+```
+
+本地 MVP 同步抓取并导入前 5 章，成功返回新建或更新后的 `bookId/title/importedChapterCount`，
+前端随后进入现有书籍详情和阅读链路。来源 URL 必须匹配 Adapter 内已启用规则的协议、主机和端口。
+首版不绕过登录、付费、验证码、DRM 或其他访问控制，也不承诺每个第三方书源长期可用。
+
 ### `GET /api/books/{bookId}`
 
 匿名可用。返回：

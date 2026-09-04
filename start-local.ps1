@@ -102,8 +102,10 @@ function Find-CompatibleJdk {
         return $jdk25OrNewer
     }
 
+    # Without JDK 25, prefer JDK 21 so the runtime matches the temporary
+    # Java 21 compilation target instead of selecting an unrelated newer JDK.
     return $availableJdks |
-        Sort-Object MajorVersion -Descending |
+        Sort-Object MajorVersion |
         Select-Object -First 1
 }
 
@@ -135,13 +137,16 @@ try {
 
     Write-Host ("Using JDK {0}: {1}" -f $selectedJdk.MajorVersion, $selectedJdk.Home) -ForegroundColor Green
 
-    & docker info *> $null
-    if ($LASTEXITCODE -ne 0) {
+    # Docker Desktop may print harmless WSL capability warnings to stderr
+    # (for example, missing blkio throttling support). Check only its exit code.
+    & $env:ComSpec /d /c 'docker info >nul 2>&1'
+    $dockerInfoExitCode = $LASTEXITCODE
+    if ($dockerInfoExitCode -ne 0) {
         throw 'Docker is unavailable. Start Docker Desktop first.'
     }
 
     Write-Host 'Starting MySQL...' -ForegroundColor Cyan
-    & docker compose -f $composeFile up -d
+    & docker compose -f $composeFile up -d --build
     if ($LASTEXITCODE -ne 0) {
         throw 'The MySQL container failed to start.'
     }
@@ -163,10 +168,27 @@ try {
         throw 'Timed out waiting for MySQL. Run docker compose -f compose.local.yml ps to inspect it.'
     }
 
+    $crawlerReady = $false
+    for ($attempt = 1; $attempt -le 60; $attempt++) {
+        $healthStatus = (& docker inspect --format '{{.State.Health.Status}}' xmreader-sonovel-adapter 2>$null | Out-String).Trim()
+        if ($healthStatus -eq 'healthy') {
+            $crawlerReady = $true
+            break
+        }
+
+        Write-Progress -Activity 'Waiting for the crawler adapter' -Status "Current status: $healthStatus" -PercentComplete (($attempt / 60) * 100)
+        Start-Sleep -Seconds 2
+    }
+    Write-Progress -Activity 'Waiting for the crawler adapter' -Completed
+
+    if (-not $crawlerReady) {
+        throw 'Timed out waiting for the crawler adapter. Run docker compose -f compose.local.yml logs sonovel-adapter to inspect it.'
+    }
+
     if ($selectedJdk.MajorVersion -ge 25) {
-        $backendCommand = 'title xmreader backend && mvn spring-boot:run'
+        $backendCommand = 'title xmreader backend && mvn clean spring-boot:run'
     } else {
-        $backendCommand = 'title xmreader backend && mvn "-Djava.version=21" spring-boot:run'
+        $backendCommand = 'title xmreader backend && mvn "-Djava.version=21" clean spring-boot:run'
         Write-Host 'JDK 25 was not found. The backend will temporarily compile for Java 21.' -ForegroundColor Yellow
     }
 
@@ -185,6 +207,7 @@ try {
     Write-Host '  Frontend: http://localhost:5173'
     Write-Host '  Backend: http://localhost:8080'
     Write-Host '  MySQL: localhost:3306'
+    Write-Host '  Crawler adapter: http://localhost:7765'
     Write-Host ''
     Write-Host 'Stop frontend/backend: press Ctrl+C in their terminal windows.'
     Write-Host 'Stop MySQL: docker compose -f compose.local.yml stop'

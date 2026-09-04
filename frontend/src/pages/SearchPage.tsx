@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
-import { Alert, Empty, Input, Pagination, Skeleton, Typography } from 'antd'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Alert, Button, Card, Empty, Input, Pagination, Skeleton, Space, Tag, Typography } from 'antd'
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { searchBooks } from '../api/catalog'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { importOnlineBook, searchBooks, searchOnlineBooks } from '../api/catalog'
+import { useAuthStore } from '../auth/authStore'
 import BookCard from '../components/BookCard'
 import SiteHeader from '../components/SiteHeader'
 
@@ -10,6 +11,8 @@ const { Paragraph, Title } = Typography
 
 export default function SearchPage() {
   const [params, setParams] = useSearchParams()
+  const navigate = useNavigate()
+  const user = useAuthStore((state) => state.user)
   const keyword = params.get('q')?.trim() ?? ''
   const page = Math.max(1, Number(params.get('page')) || 1)
   const [input, setInput] = useState(keyword)
@@ -17,6 +20,16 @@ export default function SearchPage() {
     queryKey: ['catalog', 'search', keyword, page],
     queryFn: () => searchBooks(keyword, page),
     enabled: keyword.length > 0,
+  })
+  const onlineResults = useQuery({
+    queryKey: ['crawler', 'search', keyword],
+    queryFn: () => searchOnlineBooks(keyword),
+    enabled: keyword.length > 0,
+    retry: false,
+  })
+  const importer = useMutation({
+    mutationFn: importOnlineBook,
+    onSuccess: (book) => navigate(`/book/${book.bookId}`),
   })
 
   const submit = (value: string) => {
@@ -30,7 +43,7 @@ export default function SearchPage() {
       <SiteHeader />
       <section className="page-heading">
         <Title>搜索小说</Title>
-        <Paragraph>按书名或作者检索小麦中文网本地书库。</Paragraph>
+        <Paragraph>优先检索小麦中文网本地书库，也可以从联网书源导入前 5 章试读。</Paragraph>
         <Input.Search
           aria-label="搜索书名或作者"
           size="large"
@@ -66,6 +79,62 @@ export default function SearchPage() {
               onChange={(nextPage) => setParams({ q: keyword, page: String(nextPage) })}
             />
           ) : null}
+        </section>
+      ) : null}
+
+      {keyword ? (
+        <section className="search-results online-search-results">
+          <div className="section-heading">
+            <div>
+              <Title level={2}>联网书源</Title>
+              <Paragraph type="secondary">结果来自独立采集适配器；导入需要登录，请仅采集有权访问的内容。</Paragraph>
+            </div>
+            {onlineResults.data ? <span>{onlineResults.data.length} 条</span> : null}
+          </div>
+          {onlineResults.isPending ? <Skeleton active paragraph={{ rows: 5 }} /> : null}
+          {onlineResults.isError ? (
+            <Alert
+              type="warning"
+              showIcon
+              message="联网搜索暂不可用"
+              description="请确认 xmreader-sonovel-adapter 容器已经启动并通过健康检查。"
+            />
+          ) : null}
+          {importer.isError ? (
+            <Alert className="crawler-import-alert" type="error" showIcon message="导入失败，请更换来源或稍后重试" />
+          ) : null}
+          {onlineResults.data?.length ? (
+            <div className="online-book-grid">
+              {onlineResults.data.map((book) => {
+                const importing = importer.isPending && importer.variables === book.sourceUrl
+                return (
+                  <Card key={`${book.sourceId}:${book.sourceUrl}`} className="online-book-card">
+                    <Space size={[6, 6]} wrap>
+                      <Tag color="blue">{book.sourceName}</Tag>
+                      {book.category ? <Tag>{book.category}</Tag> : null}
+                      {book.statusText ? <Tag>{book.statusText}</Tag> : null}
+                    </Space>
+                    <Title level={4}>{book.title}</Title>
+                    <Paragraph type="secondary">{book.author}</Paragraph>
+                    <Paragraph ellipsis={{ rows: 2 }}>{book.description || '暂无简介'}</Paragraph>
+                    {book.latestChapterTitle ? (
+                      <Paragraph className="online-book-latest" type="secondary">
+                        最新：{book.latestChapterTitle}
+                      </Paragraph>
+                    ) : null}
+                    <Button
+                      type="primary"
+                      loading={importing}
+                      disabled={importer.isPending && !importing}
+                      onClick={() => user ? importer.mutate(book.sourceUrl) : navigate('/login')}
+                    >
+                      {user ? '导入前 5 章' : '登录后导入'}
+                    </Button>
+                  </Card>
+                )
+              })}
+            </div>
+          ) : onlineResults.isSuccess ? <Empty description="联网书源也没有找到结果" /> : null}
         </section>
       ) : null}
     </main>

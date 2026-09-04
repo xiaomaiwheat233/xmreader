@@ -179,6 +179,43 @@ body {
   gap: 20px;
 }
 
+.online-search-results {
+  padding-top: 8px;
+  border-top: 1px solid rgb(94 72 51 / 10%);
+}
+
+.online-search-results .section-heading > div {
+  min-width: 0;
+}
+
+.online-search-results .section-heading p.ant-typography {
+  margin: 6px 0 0;
+}
+
+.online-book-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.online-book-card {
+  border: 1px solid rgb(94 72 51 / 9%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 72%);
+}
+
+.online-book-card h4.ant-typography {
+  margin: 14px 0 4px;
+}
+
+.online-book-latest {
+  min-height: 22px;
+}
+
+.crawler-import-alert {
+  margin-bottom: 18px;
+}
+
 .book-card-link {
   min-width: 0;
   color: inherit;
@@ -505,6 +542,10 @@ body {
   }
 
   .book-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .online-book-grid {
     grid-template-columns: 1fr;
   }
 

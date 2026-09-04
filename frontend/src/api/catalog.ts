@@ -65,6 +65,26 @@ export interface ChapterDetail {
   updatedAt: string
 }
 
+export interface OnlineBookCandidate {
+  sourceId: number
+  sourceName: string
+  sourceUrl: string
+  title: string
+  author: string
+  description: string | null
+  category: string | null
+  latestChapterTitle: string | null
+  updatedAtText: string | null
+  statusText: string | null
+  wordCountText: string | null
+}
+
+export interface ImportedBook {
+  bookId: string
+  title: string
+  importedChapterCount: number
+}
+
 export async function fetchHome(): Promise<HomeData> {
   const { data } = await apiClient.get<ApiEnvelope<HomeData>>('/home')
   return data.data
@@ -74,6 +94,23 @@ export async function searchBooks(query: string, page = 1): Promise<PageData<Boo
   const { data } = await apiClient.get<ApiEnvelope<PageData<BookSummary>>>('/search', {
     params: { q: query, page, pageSize: 12 },
   })
+  return data.data
+}
+
+export async function searchOnlineBooks(query: string): Promise<OnlineBookCandidate[]> {
+  const { data } = await apiClient.get<ApiEnvelope<OnlineBookCandidate[]>>('/crawler/search', {
+    params: { q: query },
+    timeout: 45_000,
+  })
+  return data.data
+}
+
+export async function importOnlineBook(sourceUrl: string): Promise<ImportedBook> {
+  const { data } = await apiClient.post<ApiEnvelope<ImportedBook>>(
+    '/crawler/imports',
+    { sourceUrl },
+    { timeout: 190_000 },
+  )
   return data.data
 }
 

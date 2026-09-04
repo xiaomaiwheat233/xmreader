@@ -12,3 +12,12 @@ management:
   endpoint:
     health:
       show-details: always
+
+app:
+  crawler:
+    enabled: false
+    base-url: http://localhost:7765
+    search-limit: 20
+    import-chapter-limit: 5
+    connect-timeout-seconds: 1
+    read-timeout-seconds: 1

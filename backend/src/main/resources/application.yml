@@ -40,6 +40,13 @@ info:
     version: 0.1.0
 
 app:
+  crawler:
+    enabled: ${CRAWLER_ENABLED:true}
+    base-url: ${CRAWLER_BASE_URL:http://localhost:7765}
+    search-limit: ${CRAWLER_SEARCH_LIMIT:20}
+    import-chapter-limit: ${CRAWLER_IMPORT_CHAPTER_LIMIT:5}
+    connect-timeout-seconds: ${CRAWLER_CONNECT_TIMEOUT_SECONDS:5}
+    read-timeout-seconds: ${CRAWLER_READ_TIMEOUT_SECONDS:180}
   fixtures:
     enabled: ${FIXTURES_ENABLED:true}
   security:
