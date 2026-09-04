@@ -48,7 +48,7 @@ app:
     connect-timeout-seconds: ${CRAWLER_CONNECT_TIMEOUT_SECONDS:5}
     read-timeout-seconds: ${CRAWLER_READ_TIMEOUT_SECONDS:180}
   fixtures:
-    enabled: ${FIXTURES_ENABLED:true}
+    enabled: ${FIXTURES_ENABLED:false}
   security:
     issuer: xmreader
     audience: xmreader-web

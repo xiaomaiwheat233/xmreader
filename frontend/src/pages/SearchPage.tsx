@@ -3,7 +3,6 @@ import { Alert, Button, Card, Empty, Input, Pagination, Skeleton, Space, Tag, Ty
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { importOnlineBook, searchBooks, searchOnlineBooks } from '../api/catalog'
-import { useAuthStore } from '../auth/authStore'
 import BookCard from '../components/BookCard'
 import SiteHeader from '../components/SiteHeader'
 
@@ -12,7 +11,6 @@ const { Paragraph, Title } = Typography
 export default function SearchPage() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
-  const user = useAuthStore((state) => state.user)
   const keyword = params.get('q')?.trim() ?? ''
   const page = Math.max(1, Number(params.get('page')) || 1)
   const [input, setInput] = useState(keyword)
@@ -87,7 +85,7 @@ export default function SearchPage() {
           <div className="section-heading">
             <div>
               <Title level={2}>联网书源</Title>
-              <Paragraph type="secondary">结果来自独立采集适配器；导入需要登录，请仅采集有权访问的内容。</Paragraph>
+              <Paragraph type="secondary">结果来自独立采集适配器，无需登录即可导入前 5 章试读；请仅采集有权访问的内容。</Paragraph>
             </div>
             {onlineResults.data ? <span>{onlineResults.data.length} 条</span> : null}
           </div>
@@ -126,9 +124,9 @@ export default function SearchPage() {
                       type="primary"
                       loading={importing}
                       disabled={importer.isPending && !importing}
-                      onClick={() => user ? importer.mutate(book.sourceUrl) : navigate('/login')}
+                      onClick={() => importer.mutate(book.sourceUrl)}
                     >
-                      {user ? '导入前 5 章' : '登录后导入'}
+                      导入前 5 章
                     </Button>
                   </Card>
                 )

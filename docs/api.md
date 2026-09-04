@@ -85,11 +85,11 @@ HTTP 状态表达协议结果，`code` 表达稳定业务分类：
 {
   "username": "reader_01",
   "password": "correct horse battery staple",
-  "nickname": "阅读者"
+  "confirmPassword": "correct horse battery staple"
 }
 ```
 
-规则：username 3–32 位 ASCII 字母、数字或下划线；password 8–72 字符；nickname 1–64 字符。成功返回 `201` 和安全用户资料，不回传 token；客户端随后显式登录。
+规则：username 3–32 位 ASCII 字母、数字或下划线；password 8–72 字符；两次密码必须一致。昵称不再作为注册项，系统暂以规范化后的用户名作为初始昵称。成功返回 `201` 和安全用户资料，不回传 token；客户端随后显式登录。
 
 ### `POST /api/auth/login`
 
@@ -120,6 +120,20 @@ HTTP 状态表达协议结果，`code` 表达稳定业务分类：
 ```
 
 用户名不存在与密码错误统一返回 `INVALID_CREDENTIALS`，避免枚举用户。
+
+### `POST /api/auth/reset-password`
+
+匿名。个人测试模式下不进行短信、邮箱等二次验证，仅根据存在的用户名设置新密码：
+
+```json
+{
+  "username": "reader_01",
+  "newPassword": "new secure password",
+  "confirmPassword": "new secure password"
+}
+```
+
+两次密码必须一致。重置成功后撤销该用户已有 refresh session，需要使用新密码重新登录；用户名不存在返回 `404 USER_NOT_FOUND`。此模式仅适用于本地个人测试，不能直接用于公开部署。
 
 ### `POST /api/auth/refresh`
 
@@ -201,7 +215,7 @@ Adapter 未启动或源站不可用时返回 `503 CRAWLER_UNAVAILABLE`，不影�
 
 ### `POST /api/crawler/imports`
 
-要求登录。把联网搜索结果中的来源地址提交给后端：
+匿名可用。把联网搜索结果中的来源地址提交给后端：
 
 ```json
 {

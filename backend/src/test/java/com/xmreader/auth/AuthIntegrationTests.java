@@ -31,6 +31,7 @@ class AuthIntegrationTests {
     private static final String USERNAME = "wheat_reader";
     private static final String PASSWORD = "reader-pass-123";
     private static final String NEW_PASSWORD = "reader-pass-456";
+    private static final String RECOVERED_PASSWORD = "reader-pass-789";
 
     @Autowired
     private MockMvc mockMvc;
@@ -52,19 +53,19 @@ class AuthIntegrationTests {
         MvcResult registration = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"username":"WHEAT_READER","password":"reader-pass-123","nickname":"小麦读者"}
+                                {"username":"WHEAT_READER","password":"reader-pass-123","confirmPassword":"reader-pass-123"}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.username").value(USERNAME))
-                .andExpect(jsonPath("$.data.nickname").value("小麦读者"))
+                .andExpect(jsonPath("$.data.nickname").value(USERNAME))
                 .andReturn();
         assertThat(readJson(registration).path("data").path("id").asText()).isNotBlank();
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"username":"wheat_reader","password":"reader-pass-123","nickname":"重复用户"}
+                                {"username":"wheat_reader","password":"reader-pass-123","confirmPassword":"reader-pass-123"}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error.type").value("USERNAME_ALREADY_EXISTS"));
@@ -147,10 +148,41 @@ class AuthIntegrationTests {
 
         MvcResult secondLogin = login(NEW_PASSWORD);
         String finalRefreshToken = refreshToken(secondLogin);
-        mockMvc.perform(post("/api/auth/logout").cookie(refreshCookie(finalRefreshToken)))
+        mockMvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"wheat_reader","newPassword":"reader-pass-789","confirmPassword":"reader-pass-789"}
+                                """))
                 .andExpect(status().isOk());
         mockMvc.perform(post("/api/auth/refresh").cookie(refreshCookie(finalRefreshToken)))
                 .andExpect(status().isUnauthorized());
+        loginExpectingUnauthorized(NEW_PASSWORD);
+
+        MvcResult recoveredLogin = login(RECOVERED_PASSWORD);
+        String recoveredRefreshToken = refreshToken(recoveredLogin);
+        mockMvc.perform(post("/api/auth/logout").cookie(refreshCookie(recoveredRefreshToken)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/auth/refresh").cookie(refreshCookie(recoveredRefreshToken)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void passwordConfirmationAndUnknownRecoveryAreRejected() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"new_reader","password":"reader-pass-123","confirmPassword":"reader-pass-456"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.type").value("VALIDATION_ERROR"));
+
+        mockMvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"missing_reader","newPassword":"reader-pass-789","confirmPassword":"reader-pass-789"}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.type").value("USER_NOT_FOUND"));
     }
 
     private MvcResult login(String password) throws Exception {

@@ -3,12 +3,18 @@ import { apiClient, type ApiEnvelope, type AuthSession, type AuthUser } from './
 export interface RegisterInput {
   username: string
   password: string
-  nickname: string
+  confirmPassword: string
 }
 
 export interface LoginInput {
   username: string
   password: string
+}
+
+export interface ResetPasswordInput {
+  username: string
+  newPassword: string
+  confirmPassword: string
 }
 
 export async function register(input: RegisterInput): Promise<AuthUser> {
@@ -19,6 +25,10 @@ export async function register(input: RegisterInput): Promise<AuthUser> {
 export async function login(input: LoginInput): Promise<AuthSession> {
   const { data } = await apiClient.post<ApiEnvelope<AuthSession>>('/auth/login', input)
   return data.data
+}
+
+export async function resetPassword(input: ResetPasswordInput): Promise<void> {
+  await apiClient.post('/auth/reset-password', input)
 }
 
 export async function refreshSession(): Promise<AuthSession> {

@@ -7,5 +7,6 @@
 - `V1__create_users_and_sessions.sql`：用户与可撤销刷新会话。
 - `V2__create_sources_books_and_chapters.sql`：内容来源、书籍与章节。
 - `V3__create_bookshelves_progress_and_history.sql`：用户书架、阅读进度与最近阅读。
+- `V4__remove_local_fixture_catalog.sql`：移除本地原创演示书目及其关联阅读数据，不影响爬虫来源。
 
 已经在任何共享数据库执行过的迁移禁止修改；后续结构变化必须新增迁移版本。

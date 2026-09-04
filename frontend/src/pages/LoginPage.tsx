@@ -39,6 +39,7 @@ export default function LoginPage() {
           </Form.Item>
           <Space orientation="vertical" className="form-actions">
             <Button type="primary" htmlType="submit" block loading={mutation.isPending}>登录</Button>
+            <Link to="/forgot-password">忘记密码？</Link>
             <span>还没有账号？<Link to="/register">立即注册</Link></span>
             <Link to="/">返回首页</Link>
           </Space>

@@ -58,7 +58,7 @@ public class AuthService {
         UserEntity user = new UserEntity();
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setNickname(request.nickname().trim());
+        user.setNickname(username);
         user.setRole("USER");
         user.setStatus("ACTIVE");
         user.setCreatedAt(now);
@@ -69,6 +69,18 @@ public class AuthService {
             throw usernameExists();
         }
         return UserResponse.from(user);
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        UserEntity user = userMapper.findByUsername(normalizeUsername(request.username()));
+        if (user == null) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, 40401, "USER_NOT_FOUND", "用户名不存在");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.setUpdatedAt(now());
+        userMapper.updateById(user);
+        sessionMapper.revokeAllForUser(user.getId(), now());
     }
 
     @Transactional

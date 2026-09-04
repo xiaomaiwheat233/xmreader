@@ -14,6 +14,8 @@ management:
       show-details: always
 
 app:
+  fixtures:
+    enabled: true
   crawler:
     enabled: false
     base-url: http://localhost:7765

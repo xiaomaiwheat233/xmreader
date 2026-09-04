@@ -38,6 +38,14 @@ public class AuthController {
                 .body(ApiResponse.success(authService.register(request), requestId(servletRequest)));
     }
 
+    @PostMapping("/reset-password")
+    public ApiResponse<Void> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request,
+            HttpServletRequest servletRequest) {
+        authService.resetPassword(request);
+        return ApiResponse.success(null, requestId(servletRequest));
+    }
+
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(
             @Valid @RequestBody LoginRequest request,

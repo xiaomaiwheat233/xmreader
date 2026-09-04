@@ -121,7 +121,7 @@ class ReadingIntegrationTests {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"username":"library_reader","password":"reader-pass-123","nickname":"书架测试读者"}
+                                {"username":"library_reader","password":"reader-pass-123","confirmPassword":"reader-pass-123"}
                                 """))
                 .andExpect(status().isCreated());
         MvcResult result = mockMvc.perform(post("/api/auth/login")

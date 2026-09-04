@@ -98,10 +98,10 @@ class CrawlerIntegrationTests {
     }
 
     @Test
-    void importEndpointRequiresAuthentication() throws Exception {
+    void importEndpointIsPublic() throws Exception {
         mockMvc.perform(post("/api/crawler/imports")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"sourceUrl\":\"https://books.example.test/book/42\"}"))
-                .andExpect(status().isUnauthorized());
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
     }
 }
