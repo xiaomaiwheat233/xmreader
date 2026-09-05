@@ -1,6 +1,6 @@
 # xmreader（小麦中文网）
 
-xmreader 是“小麦中文网”的工程名称。这是一个本地优先开发的多源小说聚合阅读平台，采用 React、Spring Boot 和 MySQL。当前版本已经具备本地书库和完整阅读链路，so-novel 尚未接入。
+xmreader 是“小麦中文网”的工程名称。这是一个本地优先开发的多源小说聚合阅读平台，采用 React、Spring Boot 和 MySQL。当前版本已经具备本地书库和完整阅读链路，并且接入了 so-novel 用于爬取小说。
 
 ## 当前能力
 
